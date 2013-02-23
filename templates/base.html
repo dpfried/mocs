@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html lang="en">
+    <head>
+        <title>{% block title %}mocs{% endblock %}</title>
+
+        <style type="text/css">
+            .error { color:red; }
+        </style>
+
+        {% block js %}
+            <script src="{% static "js/jquery.min.js" %}"></script>
+        {% endblock %}
+    </head>
+
+    <body>
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+    <div id="content">{% block content %}{% endblock %}</div>
+</body>
+</html>

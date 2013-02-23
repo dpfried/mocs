@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ block.super }} :: map{% endblock %}
+
+{% block js %}
+    {{ block.super }}
+    <script type="text/javascript">
+// variable to keep track of the last time we received data
+// a time value will be sent back with the response in a unix timestamp format
+var lastupdate = 0;
+// call getData when the document has loaded
+$(document).ready(function(){
+    getStatus();
+});
+// execute ajax call to server.py
+var getStatus = function() {
+    $.ajax({
+        type: "GET",
+        // set the destination for the query
+        url: '/maps/task_status',
+        // define JSONP because we're using a different port and/or domain
+        async: true,
+        cache: false,
+        // timeout after 5 minutes
+        timeout:300000,
+        data: { task_id: {{ data.task_id }} },
+        // process a successful response
+        success: function(response) {
+            // append the message list with the new message
+            $('#status').text(response);
+            if (response == 'complete') {
+                $('#status').hide()
+                getMap();
+            }
+            else {
+                setTimeout('getStatus();', 1000);
+            }
+        },
+        // handle error
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            // try again in 10 seconds if there was a request error
+            setTimeout('getStatus();', 10000);
+        },
+    });
+};
+var getMap = function() {
+    $.ajax({
+        type: "GET",
+        // set the destination for the query
+        url: '/maps/map',
+        // define JSONP because we're using a different port and/or domain
+        async: true,
+        cache: false,
+        // timeout after 5 minutes
+        timeout:300000,
+        data: { task_id: {{ data.task_id }} },
+        // process a successful response
+        success: function(response) {
+            // append the message list with the new message
+            $('body').html(response);
+        },
+        // handle error
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+        },
+    });
+};
+    </script>
+{% endblock %}
+
+{% block content %}
+    <p> map id: {{ data.task_id }}</p>
+    <div id='status'></div>
+    <div id='map'></div>
+{% endblock %}
