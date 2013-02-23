@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+XHTML Interactivity test case 1. 
+This is an XHTML fragment with inline SVG.  
+-->
+<div xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:100%; height:100%">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveAspectRatio="xMidYMid meet"  viewBox="0 0 600 600" overflow="visible" zoomAndPan="magnify">
+<script type="text/ecmascript">
+//<![CDATA[
+function show_info(element) {
+ var tid=document.getElementById("info");
+ var msg= "That's a " + element.getAttribute("title");
+ try {tid.getFirstChild.setData(msg);}catch(e)
+   {tid.firstChild.data=msg;}
+  };
+  
+function bring_to_front(element) {
+ document.getElementById("group1").appendChild(element);
+ };
+ 
+function set_radius(element, radius) {
+ element.setAttribute("r",radius);
+ };
+ 
+function clicker(msg) {
+ var tid=document.getElementById("info");
+ msg = "You clicked the " + msg;
+ try {tid.getFirstChild.setData(msg);}catch(e)
+   {tid.firstChild.data=msg;}
+   };
+   
+//]]>
+</script>
+
+<rect x="0" y="0" width="600" height="600" fill="#EEC" stroke="red" stroke-width="2" />
+
+<svg>
+
+<g>
+<defs>
+<path id="P2" d="M200,200L200,400L400,400z" />
+<text id="header" text-anchor="middle" fill="green" stroke="black" stroke-width="0.2" font-size="18">XHTML Interactivity test case 1</text>
+</defs>
+
+<g transform="translate(310, 100)">
+ <g>
+ <animateTransform attributeName="transform" attributeType="XML" type="rotate" from="0" to="360" begin="0s" dur="10s" repeatCount="indefinite" />
+  <use transform="rotate(0)" x="0" y="0" xlink:href="#header"/>
+ </g>
+</g>
+
+<text id="info" x="200" y="150" fill="black"> </text>
+
+<g id="group1">
+<rect title="Red rectangle" onmouseover="show_info(this); bring_to_front(this);" x="250" y="220" width="120" height="120" fill="red" stroke="black" />
+<circle title="Blue circle" onmouseover="show_info(this); bring_to_front(this); set_radius(this, 90);" onmouseout="set_radius(this, 80);" cx="400" cy="300" r="80" fill="blue" stroke="black"></circle>
+<a title="link" xlink:href="javascript:clicker(&quot;Yellow triangle&quot;);" onclick="bring_to_front(this);" onmouseover="show_info(this);" ><use title="Yellow triangle" xlink:href="#P2" id="E232" fill="yellow" stroke="black" /></a>
+</g>
+</g>
+
+</svg>
+</svg>
+
+</div>
+

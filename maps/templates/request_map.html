@@ -3,6 +3,13 @@
 
 {% block js %}
     {{ block.super }}
+    {% load staticfiles %}
+    <script src="{% static "openlayers/lib/OpenLayers.js" %}"></script>
+    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Tile/InlineXhtml.js" %}"></script>
+    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/WMS/InlineXhtml.js" %}"></script>
+    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/InlineXhtml.js" %}"></script>
+    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/ScalableInlineXhtml.js" %}"></script>
+    <script src="{% static "js/heatmap.js" %}"></script>
     <script type="text/javascript">
 // variable to keep track of the last time we received data
 // a time value will be sent back with the response in a unix timestamp format
@@ -28,11 +35,11 @@ var getStatus = function() {
             // append the message list with the new message
             $('#status').text(response);
             if (response == 'complete') {
-                $('#status').hide()
-                getMap();
+                $('#status').hide();
+                init_map("/maps/map?task_id={{ data.task_id}}");
             }
             else {
-                setTimeout('getStatus();', 1000);
+                setTimeout('getStatus();', 2000);
             }
         },
         // handle error
@@ -42,32 +49,105 @@ var getStatus = function() {
         },
     });
 };
-var getMap = function() {
-    $.ajax({
-        type: "GET",
-        // set the destination for the query
-        url: '/maps/map',
-        // define JSONP because we're using a different port and/or domain
-        async: true,
-        cache: false,
-        // timeout after 5 minutes
-        timeout:300000,
-        data: { task_id: {{ data.task_id }} },
-        // process a successful response
-        success: function(response) {
-            // append the message list with the new message
-            $('body').html(response);
-        },
-        // handle error
-        error: function(XMLHttpRequest, textStatus, errorThrown){
-        },
+var map; //OpenLayers.Map
+var heatmap;
+
+function getNode(text) {
+    return $(".node").filter(function() {
+            return $(this).children('title').text() == text;
+            })
+}
+
+function highlightTerms(termList) {
+    /* termList should be list of { term:"term", radius:r, intensity:i } objects*/
+    termList.map(function (term) {
+            highlightNode(term.term, term.radius, term.intensity);
+            });
+    heatmap.redraw();
+}
+
+function highlightNode(nodeName, radius, intensity) {
+    var svg = $('svg')[0];
+    var pt = svg.createSVGPoint();
+    var node = getNode(nodeName);
+    if (node.length > 0) {
+        console.debug('node found:');
+        console.debug(nodeName);
+        var x = node.children('text').first().attr('x');
+        var y = node.children('text').first().attr('y');
+        pt.x = x;
+        pt.y = y;
+        var txt = node.children('text')[0];
+        var ctm = txt.getTransformToElement(svg);
+        var transformedPoint = pt.matrixTransform(ctm);
+        heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(transformedPoint.x, -1*transformedPoint.y), radius, intensity));
+        }
+}
+
+function init_map(map_url) {
+    map = new OpenLayers.Map ("map", {
+        controls:[
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.PanZoomBar(),
+            new OpenLayers.Control.LayerSwitcher(),
+            new OpenLayers.Control.Attribution()
+        ]
+        });
+    var bounds = new OpenLayers.Bounds(0, -3993.73, 4320, 0);
+    var mocs = new OpenLayers.Layer.ScalableInlineXhtml(
+        "MoCS",
+        map_url,
+        bounds,
+        //new OpenLayers.Size(4000, 4000),
+        null,
+        {isBaseLayer: true,
+            opacity: '1.0'}
+    );
+    var svg = $('svg');
+    width = 4000;
+    height = 4000;
+    var bounds = new OpenLayers.Bounds(0, -1 * width, height, 0);
+    mocs.adjustBounds(bounds);
+    /*
+    heatmap = new Heatmap.Layer("Heatmap");
+    heatmap.defaultRadius = 40;
+    heatmap.defaultIntensity = 0.08;
+    // heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(1000, 1000)));
+    heatmap.setOpacity(0.5);
+    map.addLayers([mocs, heatmap]);
+    */
+    map.addLayers([mocs]);
+    map.zoomToExtent(bounds);
+
+    /*
+    $("#intensity-slider").slider({
+        min: 0.0,
+        max: 0.5,
+        step: 0.01,
+        value: heatmap.defaultIntensity,
+        change: function(event, ui) {
+            console.debug(ui.value)
+            heatmap.defaultIntensity = ui.value;
+            heatmap.redraw();
+    }
     });
-};
+    $("#radius-slider").slider({
+    min: 0,
+    max: 500,
+    step: 1,
+    value: heatmap.defaultRadius,
+    change: function(event, ui) {
+        heatmap.defaultRadius = ui.value;
+        heatmap.redraw();
+    }
+    });
+    */
+
+} 
     </script>
 {% endblock %}
 
 {% block content %}
-    <p> map id: {{ data.task_id }}</p>
     <div id='status'></div>
-    <div id='map'></div>
+    <div id='map' style='height:500px'></div>
 {% endblock %}

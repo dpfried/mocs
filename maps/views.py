@@ -1,22 +1,28 @@
-from lib.pipeline import request_task
+from lib.pipeline import request_task, map_args
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
-from maps.models import Task, Basemap, Heatmap
+from maps.models import Task, create_task_and_maps
 # Create your views here.
 
 def start_request(request):
+    task = create_task_and_maps()
+    request_task.delay(task.id, **map_args(request.GET))
+    return task.id
+
+def get_task(request):
     if request.method == 'GET':
-        # set up new objects
-        basemap = Basemap(finished=False)
-        basemap.save()
-        heatmap = Heatmap(finished=False)
-        heatmap.save()
-        task = Task(basemap=basemap, heatmap=heatmap)
-        task.save()
-        sample_size = request.GET['sample_size']
-        request = request_task.delay(task.id, sample_size)
-        data = {}
-        data['task_id'] = task.id
+        if 'task_id' in request.GET:
+            try:
+                task_id = int(request.GET['task_id'])
+                # check if the task exists, will raise DoesNotExist if it doesn't
+                Task.objects.get(id=task_id)
+            except (ValueError, Task.DoesNotExist):
+                task_id = start_request(request)
+        else:
+            task_id = start_request(request)
+        data = {
+            'task_id': task_id,
+        }
         return render_to_response('request_map.html',
                                   {'data': data})
 

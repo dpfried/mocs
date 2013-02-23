@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <title>InlineXhtml Example 1</title>
+  <script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
+  <script src="../lib/OpenLayers/Tile/InlineXhtml.js" type="text/javascript"></script>
+  <script src="../lib/OpenLayers/Layer/WMS/InlineXhtml.js" type="text/javascript"></script>
+  <script src="../lib/OpenLayers/Layer/InlineXhtml.js" type="text/javascript"></script>
+  <script src="../lib/OpenLayers/Layer/ScalableInlineXhtml.js" type="text/javascript"></script>
+
+  <script type="text/javascript">
+
+   var map; //OpenLayers.Map
+   var state_labels;
+
+   //Initialise the 'map' object
+   function init()
+    {
+     map = new OpenLayers.Map ("map", {
+     controls:[ new OpenLayers.Control.LayerSwitcher() ]
+                                      } );
+
+   var states_wms = new OpenLayers.Layer.WMS.InlineXhtml(
+     "Australia states",
+     "./example1_layer1.svg",
+     {format: 'image/svg+xml'},
+     {isBaseLayer: true, visibility: true, singleTile: true }      );
+
+   state_labels = new OpenLayers.Layer.InlineXhtml(
+     "State labels",
+     "./example1_layer2.xml",
+     {DIV1: 'info1'},
+     {isBaseLayer: false, visibility: false, singleTile: true }      );
+
+   map.addLayers([states_wms, state_labels]);
+
+   var mbounds = new OpenLayers.Bounds(120, -40, 150, -10);
+   var bm1 = mbounds.transform(new OpenLayers.Projection("EPSG:4326"),
+              map.getProjectionObject());
+   map.zoomToExtent(bm1);
+  } 
+    </script>
+
+
+  <script type="text/javascript">
+   function togglePointerEvents(cb) {
+    if (cb.checked) {
+      state_labels.div.style.pointerEvents = 'none';
+    } else {
+      state_labels.div.style.pointerEvents = null;
+    };
+   }
+  </script>
+
+  </head>
+  <body onload="init();">
+    <h1>InlineXhtml Example 1</h1>
+    Australia States - one svg layer and one xhtml layer (using fixed files as mock data feeds).
+    <br/>
+    <div>
+     <input type="checkbox" onclick="togglePointerEvents(this);">
+      <span style="font-size: smaller;">Set "State labels" pointerEvents='none'</span>
+
+    </div>
+    <div id="map" style="width: 560px; height: 460px; float:left; background: lightblue; border: 1px black solid"></div>
+    <div id="info1">
+  </body>
+</html>

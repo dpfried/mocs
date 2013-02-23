@@ -15,3 +15,13 @@ class Heatmap(models.Model):
 class Task(models.Model):
     basemap = models.ForeignKey(Basemap)
     heatmap = models.ForeignKey(Heatmap)
+
+def create_task_and_maps():
+    # set up new objects
+    basemap = Basemap(finished=False)
+    basemap.save()
+    heatmap = Heatmap(finished=False)
+    heatmap.save()
+    task = Task(basemap=basemap, heatmap=heatmap)
+    task.save()
+    return task

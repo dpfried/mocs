@@ -1,0 +1,27 @@
+<div xmlns="http://www.w3.org/1999/xhtml" xmlns:ga="http://www.ga.gov.au">
+<script>
+   function show_info(evt)
+    {
+     var d1 = document.getElementById("info1");
+     if (!d1) return;
+     var ns1= "http://www.ga.gov.au";
+     var elem = evt.target;
+     var name = elem.getAttributeNS(ns1,"name");
+     var ufi = elem.getAttributeNS(ns1,"ufi");
+     var area = elem.getAttributeNS(ns1,"area");
+     var blurb = '&lt;table&gt;&lt;tr&gt;&lt;td&gt;Name:&lt;td&gt;&lt;td&gt;'+name+'&lt;td&gt;&lt;tr&gt;&lt;tr&gt;&lt;td&gt;Area:&lt;td&gt;&lt;td&gt;'+area+'&lt;td&gt;&lt;tr&gt;&lt;tr&gt;&lt;td&gt;UFI:&lt;td&gt;&lt;td&gt;'+ufi+'&lt;td&gt;&lt;tr&gt;&lt;table&gt;';
+     d1.innerHTML = blurb;
+    };
+</script>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 599px; top: 461px; color: blue; font-size: 9px; white-space: nowrap" title="Jervis Bay Territory" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Jervis Bay Territory" ga:area=".0066825" ga:ufi="FF00010180" onclick="show_info(event);">Jervis Bay Territory</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 552px; top: 539px; color: blue; font-size: 9px; white-space: nowrap" title="Tasmania" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Tasmania" ga:area="7.0119035" ga:ufi="FF00010193" onclick="show_info(event);">Tasmania</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 579px; top: 464px; color: blue; font-size: 9px; white-space: nowrap" title="Australian Capital Territory" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Australian Capital Territory" ga:area=".2338955" ga:ufi="FF00010181" onclick="show_info(event);">Australian Capital Territory</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 557px; top: 426px; color: blue; font-size: 9px; white-space: nowrap" title="New South Wales" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="New South Wales" ga:area="76.6085725" ga:ufi="FF00010174" onclick="show_info(event);">New South Wales</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 526px; top: 480px; color: blue; font-size: 9px; white-space: nowrap" title="Victoria" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Victoria" ga:area="22.961905" ga:ufi="FF00010178" onclick="show_info(event);">Victoria</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 527px; top: 316px; color: blue; font-size: 9px; white-space: nowrap" title="Queensland" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Queensland" ga:area="151.720532" ga:ufi="FF00010169" onclick="show_info(event);">Queensland</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 429px; top: 403px; color: blue; font-size: 9px; white-space: nowrap" title="South Australia" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="South Australia" ga:area="91.762331" ga:ufi="FF00010107" onclick="show_info(event);">South Australia</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 401px; top: 281px; color: blue; font-size: 9px; white-space: nowrap" title="Northern Territory" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Northern Territory" ga:area="115.0931295" ga:ufi="FF00010110" onclick="show_info(event);">Northern Territory</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 359px; top: 227px; color: blue; font-size: 9px; white-space: nowrap" title="Northern Territory" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Northern Territory" ga:area=".0070965" ga:ufi="FF00010133" onclick="show_info(event);">Northern Territory</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 275px; top: 349px; color: blue; font-size: 9px; white-space: nowrap" title="Western Australia" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="Western Australia" ga:area="227.458676" ga:ufi="FF00010129" onclick="show_info(event);">Western Australia</div>
+<div style="position: absolute; cursor: pointer; text-decoration: underline; left: 299px; top: 235px; color: blue; font-size: 9px; white-space: nowrap" title="" onmouseover="this.style.color='red';" onmouseout="this.style.color='blue';" ga:name="" ga:area=".004579" ga:ufi="FF00010141" onclick="show_info(event);"></div>
+</div>

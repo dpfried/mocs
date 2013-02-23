@@ -196,13 +196,16 @@ def lsa(structured_phrases, phrases_to_score):
     pairwise_similarity = squareform(1 - pairwise_distance)
     return pairwise_similarity, phrases
 
-def jaccard_partial(structured_phrases, phrases_to_score):
-    return jaccard(structured_phrases, phrases_to_score, partial=True)
+def jaccard_partial(structured_phrases, phrases_to_score, status_callback=None):
+    return jaccard(structured_phrases, phrases_to_score, partial=True, status_callback=status_callback)
 
-def jaccard_full(structured_phrases, phrases_to_score):
-    return jaccard(structured_phrases, phrases_to_score, partial=False)
+def jaccard_full(structured_phrases, phrases_to_score, status_callback=None):
+    return jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=status_callback)
 
-def jaccard(structured_phrases, phrases_to_score, partial=False):
+def status_format(percent):
+    return 'similarity: %.0f%% done' % (percent * 100)
+
+def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=None):
     """ calculate jaccard similarity between phrases_to_score, using
     structured_phrases to determine cooccurrences. For phrases `a' and `b', let
     A be the set of documents `a' appeared in, and B be the set of documents
@@ -228,39 +231,35 @@ def jaccard(structured_phrases, phrases_to_score, partial=False):
     phrase_count = np.zeros(N)
     intersection = np.zeros(shape=(N, N))
 
-    if debug:
-        print 'counting collocations'
+    count = 0
+    length = len(structured_phrases)
+    increment = length / 100
+
+    def do_callback():
+        if status_callback and count % increment == 0:
+            status_callback(status_format(float(count) / length))
+
     # take each document
     for doc_phrases in structured_phrases:
-        if debug:
-            print 'processing document %s' % doc_phrases
+        do_callback()
+        count += 1
         # take all phrases within this document
         for i in range(len(doc_phrases)):
             np1 = tuple(doc_phrases[i])
-            if debug:
-                print 'processing tuple' , np1
             if np1 in indices:
-                if debug:
-                    print 'found' , np1
                 # this phrase is important enough to count
                 if partial:
                     matches1 = indices[np1]
                 else:
                     matches1 = set()
                     matches1.add(indices[np1])
-                if debug:
-                    print 'matches:' , matches1
 
                 for index1 in matches1:
                     phrase_count[index1] += 1
 
                 for k in range(i + 1, len(doc_phrases)):
                     np2 = tuple(doc_phrases[k])
-                    if debug:
-                        print '\tprocessing sub-tuple' , np2
                     if np2 in indices:
-                        if debug:
-                            print '\tfound' , np2
                         # this np is important enough to count
                         if partial:
                             matches2 = indices[np2]
@@ -273,8 +272,6 @@ def jaccard(structured_phrases, phrases_to_score, partial=False):
                                     intersection[index1][index2] += 1
                                     intersection[index2][index1] += 1
     # use inclusion exclusion
-    if debug:
-        print 'jaccard matrix'
     union = np.array([phrase_count,]*N) + np.array([phrase_count,]*N).transpose() - intersection
     jaccard = intersection / union
     return jaccard, phrases

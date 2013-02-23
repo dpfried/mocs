@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>InlineXhtml Example 5</title>
+    <script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Tile/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/WMS/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/ScalableInlineXhtml.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+   var map; //OpenLayers.Map
+
+   //OpenLayers.ProxyHost = "proxy.cgi?url=";
+   OpenLayers.ProxyHost = "http://dev.openlayers.org/releases/OpenLayers-2.9.1/examples/proxy.cgi?url=";
+
+   //Initialise the 'map' object
+   function init()
+    {
+     map = new OpenLayers.Map ("map", {
+     controls:[
+      new OpenLayers.Control.Navigation(),
+      new OpenLayers.Control.PanZoomBar(),
+      new OpenLayers.Control.LayerSwitcher(),
+      new OpenLayers.Control.Attribution()]
+                                      } );
+
+    var ol_wms = new OpenLayers.Layer.WMS(
+     "OpenLayers WMS",
+     "http://vmap0.tiles.osgeo.org/wms/vmap0",
+     {layers: 'basic'},
+     {isBaseLayer: true}
+     );
+
+    var states_wms = new OpenLayers.Layer.WMS.InlineXhtml(
+     "US states",
+     "http://demo.opengeo.org/geoserver/wms",
+     {layers: 'topp:states', format: 'image/svg+xml'},
+     {isBaseLayer: false, visibility: true, opacity: '0.6'}
+     );
+
+   map.addLayers([ol_wms, states_wms]);
+
+   var bm1 = new OpenLayers.Bounds(-128, 26, -64, 50);
+   map.zoomToExtent(bm1);
+  }     
+  
+  </script>
+
+
+  </head>
+
+  <body onload="init();">
+    <h1>InlineXhtml Example 5</h1>
+    US states - a non-interactive WMS svg layer
+    <div id="map" style="width: 520px; height: 400px;  border: 1px black solid"></div>
+  </body>
+</html>

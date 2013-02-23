@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from utils import sample_iterable, sub_lists
+from utils import sub_lists
 import database as db
 import filtering
 # import pickle
@@ -16,13 +16,12 @@ from math import log
 from sqlalchemy.sql.expression import func
 from status import set_status
 from celery import task
-from maps.models import Task, Basemap, Heatmap
+from maps.models import Task
 
 debug = False
 
 
 def filter_query(query, dirty=False, starting_year=None, ending_year=None,
-                 row_offset=None, row_limit=None, sampling_rate=None,
                  sample_size=None, model=None):
     if debug:
         print 'before filtering %d' % query.count()
@@ -36,14 +35,10 @@ def filter_query(query, dirty=False, starting_year=None, ending_year=None,
         filtered = filtered.filter(db.Document.year <= ending_year)
     if starting_year is not None:
         filtered = filtered.filter(db.Document.year >= starting_year)
-    if row_offset is not None and row_limit is not None:
-        filtered = filtered.slice(row_offset, row_offset + row_limit)
     if debug:
         print 'before sampling %d' % filtered.count()
     if sample_size is not None:
         filtered = filtered.order_by(func.rand()).limit(sample_size)
-    if sampling_rate is not None:
-        filtered = sample_iterable(filtered, sampling_rate)
 
     return [doc.terms_list() for doc in filtered]
 
@@ -82,19 +77,15 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
                  for term, count in heatmap_counts])
 
 @task()
-def request_task(task_id, sample_size=30000):
+def request_task(task_id, **kw_args):
     print 'requesting task', task_id
     task = Task.objects.get(id=task_id)
     basemap = task.basemap
     print 'after getting task and basemap'
-    return make_map(basemap, starting_year=None, ending_year=None, row_offset=None,
-                    row_limit=None, sampling_rate=None,
-                    sample_size=sample_size)
+    return make_map(basemap, **kw_args)
 
 def make_map(basemap, query=db.Document.query, heatmap_query=None, only_terms=False, file_format='svg',
-             include_svg_dimensions=False, starting_year=2000,
-             ending_year=2013, row_offset=0, row_limit=1000000,
-             sampling_rate=0.1, sample_size=None,
+             starting_year=2000, ending_year=2013, sample_size=None,
              should_filter_query=True, **params):
 
     set_status('querying docs', model=basemap)
@@ -102,8 +93,6 @@ def make_map(basemap, query=db.Document.query, heatmap_query=None, only_terms=Fa
     if should_filter_query:
         terms_in_docs = filter_query(query, starting_year=starting_year,
                                      ending_year=ending_year,
-                                     row_offset=row_offset, row_limit=row_limit,
-                                     sampling_rate=sampling_rate,
                                      sample_size=sample_size)
     else:
         terms_in_docs = [doc.terms_list() for doc in query]
@@ -130,18 +119,6 @@ def make_map(basemap, query=db.Document.query, heatmap_query=None, only_terms=Fa
     basemap.finished = True
     basemap.save()
     return True
-    '''
-    if only_terms:
-        return '\n'.join(sorted([' '.join(tpl) for tpl in graph_terms]))
-    if file_format == 'raw':
-        return map_string
-    else:
-        map_ = call_graphviz(map_string, file_format)
-        if file_format == 'svg' and not include_svg_dimensions:
-            return strip_dimensions(map_)
-        else:
-            return map_
-    '''
 
 def query_for_author(name_like):
     return db.Document.query.join(db.Author, db.Document.authors)\
@@ -204,14 +181,14 @@ call_rank.functions = ranking_fns
 call_rank.default = ranking_fns.index(ranking.cnc_bigrams)
 
 similarity_fns = [similarity.lsa, similarity.jaccard_full, similarity.jaccard_partial, similarity.distributional_js]
-def call_similarity(similarity_index, structured_nps, phrases, model=None):
+def call_similarity(similarity_index, structured_nps, phrases, model=None, status_callback=None):
     """
     similarity_index: 0 = LSA (w/ Cosine similarity); 1 = Jaccard; 2 = Jaccard (partial match); 3 = Distributional similarity (w/ Jensen-Shannon divergence)
     """
     # similarity_fns = [similarity.lsa, similarity.jaccard_full, similarity.jaccard_partial]
     similarity_fn = similarity_fns[similarity_index]
     set_status('calculating similarity with %s' % similarity_fn, model=model)
-    sim_matrix, phrases = similarity_fn(structured_nps, phrases)
+    sim_matrix, phrases = similarity_fn(structured_nps, phrases, status_callback=status_callback)
     return sim_matrix, phrases
 call_similarity.functions = similarity_fns
 call_similarity.default = similarity_fns.index(similarity.jaccard_partial)
@@ -256,7 +233,7 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     if simplify_terms:
         structured_nps = simplification.term_replacement(structured_nps, ranked_phrases)
     set_status('calculating similarity', model=model)
-    sim_matrix, phrase_lookups = call_similarity(similarity_algorithm, structured_nps, ranked_phrases, model=model)
+    sim_matrix, phrase_lookups = call_similarity(similarity_algorithm, structured_nps, ranked_phrases, model=model, status_callback=lambda s: set_status(s, model=model))
     phrase_pairs = call_filter(filtering_algorithm,  sim_matrix, phrase_lookups, model=model)
     normed = similarity.process_dict(phrase_pairs)
     # build set of terms in graph
@@ -279,49 +256,19 @@ def function_help(calling_function):
                       for index, fn in enumerate(calling_function.functions)])
 
 def map_args(args):
-    """used to filter arguments passed in on the command line that should also
+    """used to filter arguments passed in through a request that should also
     be passed as keyword args to make_map"""
-    arg_set = set(['starting_year', 'ending_year', 'row_offset', 'row_limit',
-                   'sampling_rate', 'ranking_algorithm',
-                   'similarity_algorithm', 'filtering_algorithm',
-                   'number_of_terms', 'include_svg_dimensions', 'file_format',
-                   'only_terms', 'sample_size'])
+    arg_set = {
+        'starting_year':int,
+        'ending_year':int,
+        'ranking_algorithm':int,
+        'similarity_algorithm':int,
+        'filtering_algorithm':int,
+        'number_of_terms':int,
+        'sample_size':int
+    }
     pass_args = {}
-    for arg in arg_set:
+    for arg, type_ in arg_set.items():
         if arg in args:
-            pass_args[arg] = args[arg]
+            pass_args[arg] = type_(args[arg])
     return pass_args
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="query map and print SVG representation to standard out")
-    parser.add_argument('--starting_year', type=int, help='starting year for query (inclusive)')
-    parser.add_argument('--ending_year', type=int, help='ending year for query (inclusive)')
-    parser.add_argument('--row_offset', type=int, help='index of first row to pull from database (after filtering)')
-    parser.add_argument('--row_limit', type=int, help='number of rows to sample from')
-    parser.add_argument('--sampling_rate', type=float, help='rate to sample rows at')
-    parser.add_argument('--sample_size', default=30000, type=int, help='number of rows to sample (do not use with --row_limit, --row_offset, or --sampling_rate)')
-    parser.add_argument('-r', '--ranking_algorithm', default=call_rank.default, type=int, help=function_help(call_rank))
-    parser.add_argument('-s', '--similarity_algorithm', default=call_similarity.default, type=int, help=function_help(call_similarity))
-    parser.add_argument('-f', '--filtering_algorithm', default=call_filter.default, type=int, help=function_help(call_filter))
-    parser.add_argument('-n', '--number_of_terms', default=1000, type=int, help='number of terms to rank')
-    parser.add_argument('--include_svg_dimensions', default=False, action="store_true", help='include width and height attributes in svg file')
-    parser.add_argument('--dirty', default=False, action="store_true", help='include documents not marked as clean (no title or not in English)')
-    parser.add_argument('--file_format', default='svg', type=str, help='file format of map. "raw" for graphviz schematic')
-    parser.add_argument('--author', default=None, help="string to match author using SQL's like (can use %%)")
-    parser.add_argument('--conference', default=None, help="string to match author using SQL's like (can use %%)")
-    parser.add_argument('--journal', default=None, help="string to match author using SQL's like (can use %%)")
-    parser.add_argument('--only_terms', default=False, action="store_true", help="return a list of terms in the map")
-    parser.add_argument('--debug', default=False, action="store_true", help="print status to stdout")
-    global debug
-    args = vars(parser.parse_args())
-    debug = args['debug']
-    # make the map and dump the svg rep to stdout
-    query = db.Document.query
-    if args['author']:
-        query = query_for_author(args['author'])
-    if args['journal']:
-        query = query_for_journal(args['journal'])
-    if args['conference']:
-        query = query_for_conference(args['conference'])
-    print make_map(query, **map_args(args))

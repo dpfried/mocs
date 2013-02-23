@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>InlineXhtml Example 3</title>
+    <script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Tile/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/WMS/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/ScalableInlineXhtml.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+   var map; //OpenLayers.Map
+
+   //Initialise the 'map' object
+   function init()
+    {
+     map = new OpenLayers.Map ("map", {
+     controls:[
+      new OpenLayers.Control.Navigation(),
+      new OpenLayers.Control.PanZoomBar(),
+      new OpenLayers.Control.LayerSwitcher(),
+      new OpenLayers.Control.Attribution()]
+                                      } );
+
+    var ol_wms = new OpenLayers.Layer.WMS(
+        "OpenLayers WMS",
+        "http://vmap0.tiles.osgeo.org/wms/vmap0",
+        {layers: 'basic'},
+        {isBaseLayer: true}
+    );
+
+    var aus_states = new OpenLayers.Layer.ScalableInlineXhtml(
+        "Australia States",
+        "./example3_layer1.svg",
+        new OpenLayers.Bounds(110, -50, 160, -8),
+        null,
+        {isBaseLayer: false}
+    );
+
+   map.addLayers([ol_wms, aus_states]);
+   map.zoomToExtent(new OpenLayers.Bounds(120, -40, 150, -10));
+
+  } 
+    </script>
+
+  </head>
+  <body onload="init();">
+    <h1>InlineXhtml Example 3</h1>
+    Australia States - a non-interactive (scalable) svg layer.
+    <br/>
+    <div id="map" style="width: 560px; height: 460px; float:left; border: 1px black solid"></div>
+  </body>
+</html>

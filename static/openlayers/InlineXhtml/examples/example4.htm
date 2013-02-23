@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>InlineXhtml Example 4</title>
+    <script src="http://openlayers.org/api/OpenLayers.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Tile/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/WMS/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/InlineXhtml.js" type="text/javascript"></script>
+    <script src="../lib/OpenLayers/Layer/ScalableInlineXhtml.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+	
+  var map;
+   
+   function init()
+    {
+
+     map = new OpenLayers.Map ("map", {
+     controls:[
+      new OpenLayers.Control.MousePosition(),
+      new OpenLayers.Control.Navigation(),
+      new OpenLayers.Control.PanZoomBar(),
+      new OpenLayers.Control.LayerSwitcher(),
+      new OpenLayers.Control.Attribution()],
+
+     projection: new OpenLayers.Projection("EPSG:900913"), // Spherical Mercator
+     displayProjection: new OpenLayers.Projection("EPSG:4326"),
+     numZoomLevels: 8
+                                      } );
+
+    var tas = new OpenLayers.Layer.ScalableInlineXhtml(
+        "Tasmania - OSM Mapnik SVG export",
+        "./example4_layer1.svg",
+        new OpenLayers.Bounds(143.36,-43.76,149.36,-39.53).transform(map.displayProjection, map.projection),
+        new OpenLayers.Size(500,400),
+        {isBaseLayer: true, attribution: "&copy; OpenStreetMap contributors, CC-BY-SA"}
+    );
+
+   map.addLayer(tas);
+   map.zoomToMaxExtent();
+
+  };
+
+
+    </script>
+
+  </head>
+  <body onload="init();">
+    <h1>InlineXhtml Example 4</h1>
+    OSM Mapnik SVG export - a non-interactive (scalable) svg layer.
+    <br/><br/>
+	This SVG layer was exported from openstreetmap.org as a Mapnik SVG image and
+	to make it scalable, the original "width" and "height" attributes
+	have been removed from the outermost svg element.
+    <div id="map" style="width: 500px; height: 400px; border: 1px black solid"></div>
+
+  </body>
+</html>
+   
