@@ -3,13 +3,13 @@
 
 {% block js %}
     {{ block.super }}
-    {% load staticfiles %}
-    <script src="{% static "openlayers/lib/OpenLayers.js" %}"></script>
-    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Tile/InlineXhtml.js" %}"></script>
-    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/WMS/InlineXhtml.js" %}"></script>
-    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/InlineXhtml.js" %}"></script>
-    <script src="{% static "openlayers/InlineXhtml/lib/OpenLayers/Layer/ScalableInlineXhtml.js" %}"></script>
-    <script src="{% static "js/heatmap.js" %}"></script>
+    {% load static %}
+    <script src="{% get_static_prefix %}openlayers/lib/OpenLayers.js"></script>
+    <script src="{% get_static_prefix %}openlayers/InlineXhtml/lib/OpenLayers/Tile/InlineXhtml.js"></script>
+    <script src="{% get_static_prefix %}openlayers/InlineXhtml/lib/OpenLayers/Layer/WMS/InlineXhtml.js"></script>
+    <script src="{% get_static_prefix %}openlayers/InlineXhtml/lib/OpenLayers/Layer/InlineXhtml.js"></script>
+    <script src="{% get_static_prefix %}openlayers/InlineXhtml/lib/OpenLayers/Layer/ScalableInlineXhtml.js"></script>
+    <script src="{% get_static_prefix %}js/heatmap.js"></script>
     <script type="text/javascript">
 // variable to keep track of the last time we received data
 // a time value will be sent back with the response in a unix timestamp format
@@ -49,6 +49,7 @@ var getStatus = function() {
         },
     });
 };
+OpenLayers.ImgPath = "http://js.mapbox.com/theme/dark/";
 var map; //OpenLayers.Map
 var heatmap;
 
@@ -149,5 +150,5 @@ function init_map(map_url) {
 
 {% block content %}
     <div id='status'></div>
-    <div id='map' style='height:500px'></div>
+    <div id='map' style='height:800px'></div>
 {% endblock %}

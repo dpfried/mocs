@@ -15,7 +15,7 @@ from collections import Counter
 from math import log
 from sqlalchemy.sql.expression import func
 from status import set_status
-from celery import task
+from celery.task import task
 from maps.models import Task
 
 debug = False

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load staticfiles %}
+{% load static %}
 <html lang="en">
     <head>
         <title>{% block title %}mocs{% endblock %}</title>
@@ -9,7 +9,7 @@
         </style>
 
         {% block js %}
-            <script src="{% static "js/jquery.min.js" %}"></script>
+        <script src="{% get_static_prefix %}js/jquery.min.js"></script>
         {% endblock %}
     </head>
 

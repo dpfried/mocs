@@ -31,6 +31,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mocs.settings")
 # setting points here.
 from django.core.handlers.wsgi import WSGIHandler
 application = WSGIHandler()
+'''
+def application(environ, start_response):
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    import djcelery
+    yield djcelery.__version__
+'''
 
 # Apply WSGI middleware here.
 # from helloworld.wsgi import HelloWorldApplication
