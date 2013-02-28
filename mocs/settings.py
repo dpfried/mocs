@@ -2,6 +2,10 @@ import djcelery
 djcelery.setup_loader()
 # Django settings for mtbolt project.
 
+# celery settings
+BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+CELERY_IMPORTS = ('lib.pipeline',)
+
 def abspath(*args):
     """get an absolute path relative to the project's root"""
     import os
@@ -133,36 +137,3 @@ INSTALLED_APPS = (
     'celerytest',
     'maps',
 )
-
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
-    },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
-
-# celery settings
-BROKER_URL = 'amqp://'
-CELERY_IMPORTS = ('lib.pipeline',)

@@ -16,8 +16,8 @@ framework.
 import os
 import sys
 
-site_path = '/var/www/zuni/html/mocs/django_site'
-parent_path = '/var/www/zuni/html/mocs'
+parent_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+site_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
 django_path = '/usr/lib/python2.7/dist-packages/django'
 paths = [site_path, parent_path, django_path]
 for path in paths:
