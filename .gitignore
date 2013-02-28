@@ -2,3 +2,4 @@
 *.db
 *.ropeproject
 mocs_config.py
+celeryd.pid
