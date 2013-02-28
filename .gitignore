@@ -1,4 +1,4 @@
 *.pyc
 *.db
 *.ropeproject
-config.py
+mocs_config.py
