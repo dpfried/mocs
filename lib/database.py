@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, Boolean, UnicodeText, Tab
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import _declarative_constructor
-from config import SQL_CONNECTION
+from mocs_config import SQL_CONNECTION
 
 ### configuration ###
 echo = False

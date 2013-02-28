@@ -3,8 +3,13 @@ from nltk.util import ngrams
 import utils
 from math import log
 import nltk
+from mocs_config import NLTK_DATA_PATH
 
-nltk.data.path += ['/var/www/zuni/html/mocs/nltk_data']
+if NLTK_DATA_PATH not in nltk.data.path:
+    nltk.data.path.append(NLTK_DATA_PATH)
+zuni_path = '/var/www/zuni/html/mocs/nltk_data'
+if zuni_path not in nltk.data.path:
+    nltk.data.path.append(zuni_path)
 
 class CorpusRanker:
     def __init__(self, corpus=nltk.corpus.brown.words(), ngram_range=(1,6)):
@@ -55,7 +60,7 @@ def cnc(phrase_lists, c_value_threshold = 0, include_unigrams = False, weight_by
         if l not in frequency_dists_by_length:
             frequency_dists_by_length[l] = FreqDist()
         frequency_dists_by_length[l].inc(tuple(phrase))
-        
+
     # word -> C-value(word)
     phrase_scores = {}
 

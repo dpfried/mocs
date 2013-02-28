@@ -7,7 +7,7 @@ import ranking
 import similarity
 import simplification
 import write_dot
-import config
+from mocs_config import GRAPHVIZ_PARAMS
 from subprocess import Popen, PIPE
 from re import sub
 from utils import flatten
@@ -246,7 +246,7 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
 def call_graphviz(map_string, file_format='svg', model=None):
     """map_string should be a string in the dot file format, which the pipeline will be called on. Output in format file_format"""
     set_status('drawing graph', model=model)
-    proc = Popen(graphviz_command(file_format=file_format, **config.GRAPHVIZ_PARAMS), stdout=PIPE, stdin=PIPE, shell=True)
+    proc = Popen(graphviz_command(file_format=file_format, **GRAPHVIZ_PARAMS), stdout=PIPE, stdin=PIPE, shell=True)
     map_out, map_err = proc.communicate(input=map_string)
     return map_out
 
