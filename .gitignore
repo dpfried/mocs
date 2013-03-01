@@ -3,3 +3,5 @@
 *.ropeproject
 mocs_config.py
 celeryd.pid
+create_superuser.py
+local_settings.py
