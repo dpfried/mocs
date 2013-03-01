@@ -23,7 +23,7 @@ var getStatus = function() {
     $.ajax({
         type: "GET",
         // set the destination for the query
-        url: '/maps/task_status',
+        url: '{% url maps.views.task_status %}',
         // define JSONP because we're using a different port and/or domain
         async: true,
         cache: false,
@@ -36,7 +36,7 @@ var getStatus = function() {
             $('#status').text(response);
             if (response == 'complete') {
                 $('#status').hide();
-                init_map("/maps/map?task_id={{ data.task_id}}");
+                init_map("/mocs/maps/map?task_id={{ data.task_id }}");
             }
             else {
                 setTimeout('getStatus();', 2000);
