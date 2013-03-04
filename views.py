@@ -6,3 +6,6 @@ from restart import restart
 def reload_site(request):#, login_url=reverse('admin:index')):
     pid = restart()
     return HttpResponse(u'killed process %s' % pid)
+
+def home(request):
+    return HttpResponse(u'Django is still working')
