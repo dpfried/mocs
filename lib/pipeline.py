@@ -48,19 +48,46 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     return term_counts
 
 
+def _handle_query(arg_dict, prefix):
+    author = '%s_author' % prefix
+    conference = '%s_conference' % prefix
+    journal = '%s_journal' % prefix
+    print prefix
+
+    if arg_dict.get(author):
+        name_like = arg_dict.get(author)
+        print name_like
+        query = db.Author.doc_query(name_like)
+    elif arg_dict.get(conference):
+        name_like = arg_dict.get(conference)
+        print name_like
+        query = db.Conference.doc_query(name_like)
+    elif arg_dict.get(journal):
+        name_like = arg_dict.get(journal)
+        print name_like
+        query = db.Journal.doc_query(name_like)
+    else:
+        print 'none'
+        query = db.Document.query
+    return query
+
+
 @task()
 def request_task(task_id, **kwargs):
+    basemap_query = _handle_query(kwargs, 'basemap')
+    heatmap_query = _handle_query(kwargs, 'heatmap')
+
     print 'requesting task', task_id
     task = Task.objects.get(id=task_id)
     print 'after getting task and basemap'
-    map_dict, graph_terms = make_basemap(task.basemap, **filter_basemap_args(kwargs))
+    map_dict, graph_terms = make_basemap(task.basemap, basemap_query, **filter_basemap_args(kwargs))
     print 'making heatmap'
-    make_heatmap(task.heatmap, graph_terms, **filter_heatmap_args(kwargs))
+    make_heatmap(task.heatmap, graph_terms, heatmap_query, **filter_heatmap_args(kwargs))
     print 'done'
     return task_id
 
 
-def make_heatmap(heatmap, graph_terms, heatmap_query=db.Document.query, heatmap_starting_year=None,
+def make_heatmap(heatmap, graph_terms, heatmap_query, heatmap_starting_year=None,
                  heatmap_ending_year=None, heatmap_sample_size=None):
     def _jsonready_heatmap_vals(heatmap_vals, term_to_str_fn=lambda tpl: ' '.join(tpl)):
         """Input: a dictionary of string tuples to values.
@@ -81,9 +108,8 @@ def make_heatmap(heatmap, graph_terms, heatmap_query=db.Document.query, heatmap_
     heatmap.save()
     return heatmap_vals
 
-def make_basemap(basemap, basemap_query=db.Document.query,
-                 file_format='svg', basemap_starting_year=2000, basemap_ending_year=2013,
-                 basemap_sample_size=None, **kwargs):
+def make_basemap(basemap, basemap_query, basemap_starting_year=2000,
+                 basemap_ending_year=2013, basemap_sample_size=None, **kwargs):
     print kwargs
     set_status('getting document list', model=basemap)
     terms_in_docs = filter_query(basemap_query, dirty=False,

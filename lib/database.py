@@ -105,6 +105,11 @@ class Author(Base):
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
 
+    @classmethod
+    def doc_query(cls, name_like):
+        return Document.query.join(Author, Document.authors)\
+                .filter(Author.name.like(name_like))
+
     def __unicode__(self):
         return u'%s' % self.name
 
@@ -115,6 +120,10 @@ class Journal(Base):
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
 
+    @classmethod
+    def doc_query(cls, name_like):
+        return Document.query.join(Journal).filter(Journal.name.like(name_like))
+
     def __unicode__(self):
         return u'%s' % self.name
 
@@ -123,6 +132,10 @@ class Conference(Base):
     __tablename__ = 'conference'
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
+
+    @classmethod
+    def doc_query(cls, name_like):
+        return Document.query.join(Conference).filter(Conference.name.like(name_like))
 
     def __unicode__(self):
         return u'%s' % self.name
