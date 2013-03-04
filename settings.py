@@ -30,11 +30,14 @@ except ImportError:
 
     DEBUG = True
 
-TEMPLATE_DEBUG = DEBUG
+    SECRET_KEY = '---SECRET KEY HERE---'
 
-ADMINS = (
-    ('Daniel Fried', 'dfried@email.arizona.edu'),
-)
+    ADMINS = (
+        ('admin', 'admin@example.com'),
+    )
+
+
+TEMPLATE_DEBUG = DEBUG
 
 MANAGERS = ADMINS
 
@@ -94,9 +97,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
-
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = 'hw&(!%683mznuivx(+)07kk+-mycjxa#)f2-#%fc(gkp@-2-$@'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
