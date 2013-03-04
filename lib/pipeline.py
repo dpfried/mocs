@@ -84,7 +84,7 @@ def make_heatmap(heatmap, graph_terms, heatmap_query=db.Document.query, heatmap_
 def make_basemap(basemap, basemap_query=db.Document.query,
                  file_format='svg', basemap_starting_year=2000, basemap_ending_year=2013,
                  basemap_sample_size=None, **kwargs):
-
+    print kwargs
     set_status('getting document list', model=basemap)
     terms_in_docs = filter_query(basemap_query, dirty=False,
                                  starting_year=basemap_starting_year,
@@ -266,9 +266,9 @@ filter_basemap_args = _make_arg_filter(
         'basemap_sample_size': int,
         'basemap_starting_year': int,
         'number_of_terms': int,
-        'filtering_algorithm': int,
         'ranking_algorithm': int,
-        'similarity_algorithm': int
+        'similarity_algorithm': int,
+        'filtering_algorithm': int
     }
 )
 
