@@ -36,7 +36,7 @@ var getStatus = function() {
             $('#status').text(response);
             if (response == 'complete') {
                 $('#status').hide();
-                init_map("/mocs/maps/map?task_id={{ data.task_id }}");
+                init_map("{% url maps.views.basemap %}?task_id={{ data.task_id }}");
             }
             else {
                 setTimeout('getStatus();', 2000);
@@ -71,18 +71,31 @@ function highlightNode(nodeName, radius, intensity) {
     var svg = $('svg')[0];
     var pt = svg.createSVGPoint();
     var node = getNode(nodeName);
+    var ctm;
     if (node.length > 0) {
+        /*
         console.debug('node found:');
         console.debug(nodeName);
-        var x = node.children('text').first().attr('x');
-        var y = node.children('text').first().attr('y');
+        */
+        var text_element = node.children('text').first();
+        var x = text_element.attr('x');
+        var y = text_element.attr('y');
+        console.debug(x);
+        console.debug(y);
         pt.x = x;
         pt.y = y;
-        var txt = node.children('text')[0];
-        var ctm = txt.getTransformToElement(svg);
+        if (ctm == null) {
+            var txt = text_element[0];
+            ctm = txt.getTransformToElement(svg);
+        }
         var transformedPoint = pt.matrixTransform(ctm);
+        console.debug(transformedPoint);
         heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(transformedPoint.x, -1*transformedPoint.y), radius, intensity));
         }
+    else {
+        console.debug('node not found:');
+        console.debug(nodeName);
+    }
 }
 
 function init_map(map_url) {
@@ -94,31 +107,34 @@ function init_map(map_url) {
             new OpenLayers.Control.Attribution()
         ]
         });
-    var bounds = new OpenLayers.Bounds(0, -3993.73, 4320, 0);
+    var bounds = new OpenLayers.Bounds(0, -4320, 3679, 0);
     var mocs = new OpenLayers.Layer.ScalableInlineXhtml(
         "MoCS",
         map_url,
         bounds,
-        //new OpenLayers.Size(4000, 4000),
+        //new OpenLayers.Size(1000, 1000),
         null,
         {isBaseLayer: true,
             opacity: '1.0'}
     );
     var svg = $('svg');
-    width = 4000;
-    height = 4000;
-    var bounds = new OpenLayers.Bounds(0, -1 * width, height, 0);
     mocs.adjustBounds(bounds);
-    /*
     heatmap = new Heatmap.Layer("Heatmap");
+    /*
     heatmap.defaultRadius = 40;
     heatmap.defaultIntensity = 0.08;
-    // heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(1000, 1000)));
+    */
     heatmap.setOpacity(0.5);
     map.addLayers([mocs, heatmap]);
-    */
-    map.addLayers([mocs]);
     map.zoomToExtent(bounds);
+
+    var ov_options = {
+              //layers: [mocs],
+            };
+    overview = new OpenLayers.Control.OverviewMap(ov_options);
+    overview.size.w = 160;
+    overview.size.h = 120;
+    //map.addControl(overview);
 
     /*
     $("#intensity-slider").slider({

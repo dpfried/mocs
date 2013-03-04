@@ -1,0 +1,55 @@
+Starting Year:
+    Only include documents published in this year or later
+Ending Year:
+    Only include documents published in this year or previously
+Number of Documents:
+    Number of documents to include in random sample. 
+Number of Terms:
+    Control number of top terms (after ranking) to pass to similarity algorithm
+Ranking Algorithm:
+    - TF
+        Term Frequency
+
+        Rank terms by the number of occurrences in the document titles
+
+    - TF/ICF
+        Term Frequency/Inverse Corpus Frequency
+
+        Rank terms by the number of occurrences in the document titles, divided by 1 + the number of occurrences in the Brown corpus
+
+    - C-Value
+        Rank by frequency, prioritizing nested terms (see Frantzi et. al, http://link.springer.com/article/10.1007%2Fs007999900023, for details)
+
+        Excludes unigrams (single-word terms)
+
+    - C-Value with Unigrams
+        Rank by frequency, prioritizing nested terms (see Frantzi et. al, http://link.springer.com/article/10.1007%2Fs007999900023, for details)
+
+        Includes unigrams (single-word terms)
+        
+Similarity Algorithm:
+    - Latent Semantic Analysis
+        Produce set of concepts underlying phrases in titles using singular value decomposition, then use cosine similarity similarity (http://en.wikipedia.org/wiki/Cosine_similarity) between term rows as pairwise term similarity
+
+        http://en.wikipedia.org/wiki/Latent_semantic_analysis
+
+    - Jaccard
+        Calculate pairwise term similarity as number of documents two terms appeared together in, divided by number of documents either term appeared in.
+
+        Treats terms as atomic units: e.g. ``Jaccard'' and ``Jaccard Partial Match'' are not the same term
+
+        http://en.wikipedia.org/wiki/Jaccard_index
+
+    - Jaccard Partial Match
+        Calculate pairwise term similarity as number of documents two terms appeared together in, divided by number of documents either term appeared in.
+
+        Treats two terms as the same if they overlap: e.g. ``Jaccard'' and ``Jaccard Partial Match'' are counted as the same term
+
+        http://en.wikipedia.org/wiki/Jaccard_index
+
+    - Distributional (Jensen-Shannon)
+        Compute pairwise term similarity as the Jensen-Shannon (http://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence) divergence of their multinomial term context distributions across all documents. Very slow.
+
+Filtering Algorithm
+    - Top Terms Only
+        Plot the 500 highest-ranked terms, and the similarities between these terms. Do not bring in any lesser-ranked terms, even if they are very similar to top terms.

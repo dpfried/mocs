@@ -1,4 +1,4 @@
-from lib.pipeline import request_task, map_args
+from lib.pipeline import request_task
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from maps.models import Task, create_task_and_maps
@@ -6,7 +6,7 @@ from maps.models import Task, create_task_and_maps
 
 def start_request(request):
     task = create_task_and_maps()
-    request_task.delay(task.id, **map_args(request.GET))
+    request_task.delay(task.id, **dict(request.GET.items()))
     return task.id
 
 def get_task(request):
@@ -23,8 +23,7 @@ def get_task(request):
         data = {
             'task_id': task_id,
         }
-        return render_to_response('request_map.html',
-                                  {'data': data})
+        return render_to_response('request_map.html', {'data': data})
 
 def task_status(request):
     if request.method == 'GET':
@@ -33,13 +32,19 @@ def task_status(request):
         if not task.basemap.finished:
             status = task.basemap.status
         else:
-            status = task.heatmap.status
-        status = task.basemap.status
+            status = 'complete'
         return HttpResponse(u'%s' % status)
 
-def map(request):
+def basemap(request):
     if request.method == 'GET':
         task_id = request.GET.get('task_id')
         task = Task.objects.get(id=task_id)
         if task.basemap.finished:
             return HttpResponse(u'%s' % task.basemap.svg_rep)
+
+def heatmap(request):
+    if request.method == 'GET':
+        task_id = request.GET.get('task_id')
+        task = Task.objects.get(id=task_id)
+        if task.heatmap.finished:
+            return HttpResponse(u'%s' % task.heatmap.terms)
