@@ -34,10 +34,7 @@ application = WSGIHandler()
 '''
 def application(environ, start_response):
     start_response('200 OK', [('Content-Type', 'text/plain')])
-    import djcelery
-    yield djcelery.__version__
+    yield ' '.join(paths)
+    yield ' '
+    yield ' '.join(sys.path)
 '''
-
-# Apply WSGI middleware here.
-# from helloworld.wsgi import HelloWorldApplication
-# application = HelloWorldApplication(application)
