@@ -19,36 +19,62 @@ $(document).ready(function(){
     getStatus();
 });
 // execute ajax call to server.py
-var getStatus = function() {
+function getStatus() {
     $.ajax({
         type: "GET",
         // set the destination for the query
-        url: '{% url maps.views.task_status %}',
-        // define JSONP because we're using a different port and/or domain
+        url: '{% url maps.views.task_status data.task_id %}',
         async: true,
         cache: false,
         // timeout after 5 minutes
         timeout:300000,
-        data: { task_id: {{ data.task_id }} },
         // process a successful response
         success: function(response) {
             // append the message list with the new message
             $('#status').text(response);
             if (response == 'complete') {
                 $('#status').hide();
-                init_map("{% url maps.views.basemap data.task_id %}");
+                init_map("{% url maps.views.basemap data.basemap_id %}");
             }
             else {
-                setTimeout('getStatus();', 2000);
+                setTimeout(getStatus, 2000);
             }
         },
         // handle error
         error: function(XMLHttpRequest, textStatus, errorThrown){
             // try again in 10 seconds if there was a request error
-            setTimeout('getStatus();', 10000);
+            setTimeout(getStatus, 10000);
         },
     });
-};
+}
+
+function getHeatmap() {
+    $.ajax({
+        type: "GET",
+        // set the destination for the query
+        url: '{% url maps.views.heatmap data.heatmap_id %}',
+        async: true,
+        cache: false,
+        // timeout after 5 minutes
+        timeout:300000,
+        // process a successful response
+        success: function(response) {
+            if (response != 'pending') {
+                var term_list = $.parseJSON(response);
+                highlightTerms(term_list);
+            }
+            else {
+                setTimeout(getHeatmap, 1000);
+            }
+        },
+        // handle error
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            // try again in 10 seconds if there was a request error
+            setTimeout(getHeatmap, 10000);
+        },
+    });
+
+}
 OpenLayers.ImgPath = "http://js.mapbox.com/theme/dark/";
 var map; //OpenLayers.Map
 var heatmap;
@@ -59,24 +85,36 @@ function getNode(text) {
             })
 }
 
+var delay = 0;
+var delta_delay = 500;
 function highlightTerms(termList) {
+    console.debug(termList);
     /* termList should be list of { term:"term", radius:r, intensity:i } objects*/
-    termList.map(function (term) {
-            highlightNode(term.term, term.radius, term.intensity);
-            });
-    heatmap.redraw();
+    var svg = $('svg');
+    // avoid race condition: check if svg has been initialized yet before trying to draw terms
+    if (svg.length == 0) {
+        delay += delta_delay;
+        setTimeout(highlightTerms, delay, termList)
+    }
+    else {
+        termList.map(function (term) {
+                highlightNode(term.term, term.radius, term.intensity);
+                });
+        heatmap.redraw();
+    }
 }
 
 function highlightNode(nodeName, radius, intensity) {
+    console.debug(nodeName);
+    console.debug(radius);
+    console.debug(intensity);
     var svg = $('svg')[0];
     var pt = svg.createSVGPoint();
     var node = getNode(nodeName);
     var ctm;
     if (node.length > 0) {
-        /*
         console.debug('node found:');
         console.debug(nodeName);
-        */
         var text_element = node.children('text').first();
         var x = text_element.attr('x');
         var y = text_element.attr('y');
@@ -135,6 +173,8 @@ function init_map(map_url) {
     overview.size.w = 160;
     overview.size.h = 120;
     //map.addControl(overview);
+
+    getHeatmap();
 
     /*
     $("#intensity-slider").slider({

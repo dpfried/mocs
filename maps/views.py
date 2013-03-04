@@ -2,7 +2,7 @@ from lib.pipeline import request_task
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse
-from maps.models import Task, create_task_and_maps
+from maps.models import Task, Basemap, Heatmap, create_task_and_maps
 # Create your views here.
 
 def request_map(request):
@@ -13,15 +13,16 @@ def request_map(request):
 
 def display_map(request, task_id):
     if request.method == 'GET':
-        Task.objects.get(id=task_id)
+        task = Task.objects.get(id=task_id)
         data = {
             'task_id': task_id,
+            'basemap_id': task.basemap.id,
+            'heatmap_id': task.heatmap.id
         }
         return render_to_response('display_map.html', {'data': data})
 
-def task_status(request):
+def task_status(request, task_id):
     if request.method == 'GET':
-        task_id = request.GET.get('task_id')
         task = Task.objects.get(id=task_id)
         if not task.basemap.finished:
             status = task.basemap.status
@@ -29,18 +30,21 @@ def task_status(request):
             status = 'complete'
         return HttpResponse(u'%s' % status)
 
-def basemap(request, task_id):
+def basemap(request, basemap_id):
     if request.method == 'GET':
-        task = Task.objects.get(id=task_id)
-        if task.basemap.finished:
-            return HttpResponse(u'%s' % task.basemap.svg_rep)
+        basemap = Basemap.objects.get(id=basemap_id)
+        if basemap.finished:
+            return HttpResponse(u'%s' % basemap.svg_rep)
+        else:
+            return HttpResponse(u'pending')
 
-def heatmap(request):
+def heatmap(request, heatmap_id):
     if request.method == 'GET':
-        task_id = request.GET.get('task_id')
-        task = Task.objects.get(id=task_id)
-        if task.heatmap.finished:
-            return HttpResponse(u'%s' % task.heatmap.terms)
+        heatmap = Heatmap.objects.get(id=heatmap_id)
+        if heatmap.finished:
+            return HttpResponse(u'%s' % heatmap.terms)
+        else:
+            return HttpResponse(u'pending')
 
 def query(request):
     if request.method == 'GET':

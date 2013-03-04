@@ -5,6 +5,14 @@
 {% block js %}
 {{ block.super }}
 {% load static %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+                // set defaults for dropdown boxes
+                $('#ranking_algorithm').val('1');
+                $('#similarity_algorithm').val('2');
+                $('#filtering_algorithm').val('1');
+        });
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -63,7 +71,7 @@
                 <label for='heatmap_ending_year'>Ending Year:</label><br>
                 <input id='heatmap_ending_year' type='number' name='heatmap_ending_year' min='1930' max='2013' value='2013' autocomplete='off'><br>
                 <label for='heatmap_sample_size'>Number of Documents:</label><br>
-                <input id='heatmap_sample_size' type='number' name='heatmap_sample_size' min='100' max='50000' value='30000' autocomplete='off'><br>
+                <input id='heatmap_sample_size' type='number' name='heatmap_sample_size' min='100' max='50000' value='2000' autocomplete='off'><br>
                 <label for='heatmap_author'>Author:</label><br>
                 <input type='text' id='heatmap_author' name='heatmap_author'><br>
                 <label for='heatmap_conference'>Conference:</label><br>
