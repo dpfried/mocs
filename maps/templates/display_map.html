@@ -88,7 +88,7 @@ function getNode(text) {
 var delay = 0;
 var delta_delay = 500;
 function highlightTerms(termList) {
-    console.debug(termList);
+    //console.debug(termList);
     /* termList should be list of { term:"term", radius:r, intensity:i } objects*/
     var svg = $('svg');
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
@@ -105,21 +105,21 @@ function highlightTerms(termList) {
 }
 
 function highlightNode(nodeName, radius, intensity) {
-    console.debug(nodeName);
-    console.debug(radius);
-    console.debug(intensity);
+    //console.debug(nodeName);
+    //console.debug(radius);
+    //console.debug(intensity);
     var svg = $('svg')[0];
     var pt = svg.createSVGPoint();
     var node = getNode(nodeName);
     var ctm;
     if (node.length > 0) {
-        console.debug('node found:');
-        console.debug(nodeName);
+        //console.debug('node found:');
+        //console.debug(nodeName);
         var text_element = node.children('text').first();
         var x = text_element.attr('x');
         var y = text_element.attr('y');
-        console.debug(x);
-        console.debug(y);
+        //console.debug(x);
+        //console.debug(y);
         pt.x = x;
         pt.y = y;
         if (ctm == null) {
@@ -127,12 +127,12 @@ function highlightNode(nodeName, radius, intensity) {
             ctm = txt.getTransformToElement(svg);
         }
         var transformedPoint = pt.matrixTransform(ctm);
-        console.debug(transformedPoint);
+        //console.debug(transformedPoint);
         heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(transformedPoint.x, -1*transformedPoint.y), radius, intensity));
         }
     else {
-        console.debug('node not found:');
-        console.debug(nodeName);
+        //console.debug('node not found:');
+        //console.debug(nodeName);
     }
 }
 
@@ -158,11 +158,11 @@ function init_map(map_url) {
     var svg = $('svg');
     mocs.adjustBounds(bounds);
     heatmap = new Heatmap.Layer("Heatmap");
-    /*
     heatmap.defaultRadius = 40;
+    /*
     heatmap.defaultIntensity = 0.08;
     */
-    heatmap.setOpacity(0.5);
+    heatmap.setOpacity(0.8);
     map.addLayers([mocs, heatmap]);
     map.zoomToExtent(bounds);
 
@@ -174,16 +174,13 @@ function init_map(map_url) {
     overview.size.h = 120;
     //map.addControl(overview);
 
-    getHeatmap();
-
-    /*
     $("#intensity-slider").slider({
         min: 0.0,
         max: 0.5,
         step: 0.01,
         value: heatmap.defaultIntensity,
         change: function(event, ui) {
-            console.debug(ui.value)
+            //console.debug(ui.value)
             heatmap.defaultIntensity = ui.value;
             heatmap.redraw();
     }
@@ -198,7 +195,8 @@ function init_map(map_url) {
         heatmap.redraw();
     }
     });
-    */
+
+    getHeatmap();
 
 } 
     </script>
@@ -207,4 +205,8 @@ function init_map(map_url) {
 {% block content %}
     <div id='status'></div>
     <div id='map' style='height:800px'></div>
+    radius
+    <div id='radius-slider' style='margin:1em'></div>
+    intensity
+    <div id='intensity-slider' style='margin:1em'></div>
 {% endblock %}
