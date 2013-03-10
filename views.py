@@ -8,4 +8,4 @@ def reload_site(request):#, login_url=reverse('admin:index')):
     return HttpResponse(u'killed process %s' % pid)
 
 def home(request):
-    return HttpResponse(u'Django is still working')
+    return HttpResponse(u'Django is working.')
