@@ -42,6 +42,10 @@ def basemap_metadata(request, basemap_id):
     basemap = Basemap.objects.get(id=basemap_id)
     return HttpResponse(basemap.json_metadata(), content_type='application/json')
 
+def heatmap_metadata(request, heatmap_id):
+    heatmap = Heatmap.objects.get(id=heatmap_id)
+    return HttpResponse(heatmap.json_metadata(), content_type='application/json')
+
 def heatmap(request, heatmap_id):
     if request.method == 'GET':
         heatmap = Heatmap.objects.get(id=heatmap_id)
