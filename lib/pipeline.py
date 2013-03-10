@@ -9,7 +9,7 @@ import simplification
 import write_dot
 from mocs_config import GRAPHVIZ_PARAMS
 from subprocess import Popen, PIPE
-from re import sub
+from re import sub, search
 from utils import flatten
 from collections import Counter
 from sqlalchemy.sql.expression import func
@@ -21,6 +21,10 @@ import json
 debug = False
 
 USE_SFDP_FOR_LAYOUT = False
+
+# a regular expression to extract width and height from the svg, and then
+# eliminate these attributes
+SVG_DIMENSION_REPLACEMENT = ('<svg width="(.*)pt" height="(.*)pt"', '<svg')
 
 def filter_query(query, dirty=False, starting_year=None, ending_year=None,
                  sample_size=None, model=None):
@@ -124,12 +128,21 @@ def make_basemap(basemap, basemap_query, basemap_starting_year=2000,
     map_string = write_dot.output_pairs_dict(map_dict, True)
     # save to database
     basemap.dot_rep = map_string
-    basemap.save()
-    svg_str = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
+    try:
+        basemap.save()
+    except Exception as e:
+        print e
+        with open('/tmp/map_string', 'w') as f:
+            f.write(map_string)
+        with open('/tmp/map_dict', 'w') as f:
+            f.write(str(map_dict))
+    svg_str, width, height = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
     basemap.svg_rep = svg_str
-    set_status('basemap complete', model=basemap)
+    basemap.width = width
+    basemap.height = height
     basemap.finished = True
     basemap.save()
+    set_status('basemap complete', model=basemap)
     return map_dict, graph_terms
 
 
@@ -227,7 +240,12 @@ def graphviz_command(sfdp='sfdp', gvmap='gvmap', gvpr='gvpr', labels_path='map/v
 
 def strip_dimensions(svg):
     """having width and height attributes as well as a viewbox will cause openlayers to not display the svg propery, so we strip those attributes out"""
-    return sub('<svg width=".*" height=".*"', '<svg', svg, count=1)
+    match_re, replacement = SVG_DIMENSION_REPLACEMENT
+    try:
+        width, height = map(float, search(match_re, svg).groups())
+    except Exception:
+        width, height = 0.0, 0.0
+    return sub(match_re, replacement, svg, count=1), width, height
 
 
 def map_representation(structured_nps, start_words=None, ranking_algorithm=1,

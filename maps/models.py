@@ -6,6 +6,8 @@ class Basemap(models.Model):
     svg_rep = models.TextField()
     finished = models.BooleanField()
     status = models.TextField()
+    height = models.FloatField()
+    width = models.FloatField()
 
 class Heatmap(models.Model):
     terms = models.TextField()
