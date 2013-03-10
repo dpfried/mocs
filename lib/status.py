@@ -4,5 +4,6 @@ def set_status(status, model=None, state='PROGRESS'):
         if model.status is None:
             model.status = status
         else:
-            model.status += '\n' + status
+            #model.status += '\n' + status
+            model.status = status
         model.save()
