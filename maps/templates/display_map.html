@@ -88,18 +88,20 @@ function getNode(text) {
 
 var delay = 0;
 var delta_delay = 500;
-function highlightTerms(termList) {
-    //console.debug(termList);
-    /* termList should be list of { term:"term", radius:r, intensity:i } objects*/
+function highlightTerms(term_list) {
+    //console.debug(term_list);
+    /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
+    var scaling_factor = term_list.map(function(d) { return d.intensity; })
+        .reduce(function(p, c) { return Math.max(p,c); });
     var svg = $('svg');
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
     if (svg.length == 0) {
         delay += delta_delay;
-        setTimeout(highlightTerms, delay, termList)
+        setTimeout(highlightTerms, delay, term_list)
     }
     else {
-        termList.map(function (term) {
-                highlightNode(term.term, term.radius, term.intensity);
+        term_list.map(function (term) {
+                highlightNode(term.term, term.radius, term.intensity / scaling_factor);
                 });
         heatmap.redraw();
     }
@@ -108,7 +110,7 @@ function highlightTerms(termList) {
 function highlightNode(nodeName, radius, intensity) {
     //console.debug(nodeName);
     //console.debug(radius);
-    //console.debug(intensity);
+    console.debug(intensity);
     var svg = $('svg')[0];
     var pt = svg.createSVGPoint();
     var node = getNode(nodeName);

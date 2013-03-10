@@ -106,13 +106,12 @@ class Author(Base):
     name = Column(UnicodeText)
 
     @classmethod
-    def doc_query(cls, name_like):
-        return Document.query.join(Author, Document.authors)\
+    def filter_document_query(cls, query, name_like):
+        return query.join(Author, Document.authors)\
                 .filter(Author.name.like(name_like))
 
     def __unicode__(self):
         return u'%s' % self.name
-
 
 class Journal(Base):
     """Journals can have multiple papers, backreferenced through Journal.documents (see Document class)"""
@@ -121,11 +120,12 @@ class Journal(Base):
     name = Column(UnicodeText)
 
     @classmethod
-    def doc_query(cls, name_like):
-        return Document.query.join(Journal).filter(Journal.name.like(name_like))
+    def filter_document_query(cls, query, name_like):
+        return query.join(Journal).filter(Journal.name.like(name_like))
 
     def __unicode__(self):
         return u'%s' % self.name
+
 
 class Conference(Base):
     """Conferences can have multiple papers, backreferenced through Conference.documents (see Document class)"""
@@ -134,11 +134,12 @@ class Conference(Base):
     name = Column(UnicodeText)
 
     @classmethod
-    def doc_query(cls, name_like):
-        return Document.query.join(Conference).filter(Conference.name.like(name_like))
+    def filter_document_query(cls, query, name_like):
+        return query.join(Conference).filter(Conference.name.like(name_like))
 
     def __unicode__(self):
         return u'%s' % self.name
+
 
 def sliced_query(query, slice_size=10000, session_to_write=None):
     """ takes a SQLAlchemy query and allows memory-efficient iteration over a large

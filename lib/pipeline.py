@@ -15,7 +15,7 @@ from collections import Counter
 from sqlalchemy.sql.expression import func
 from status import set_status
 from celery.task import task
-from maps.models import Task
+from maps.models import Task, Basemap, Heatmap
 import json
 
 debug = False
@@ -29,16 +29,22 @@ SVG_DIMENSION_REPLACEMENT = ('<svg width="(.*)pt" height="(.*)pt"', '<svg')
 def filter_query(query, dirty=False, starting_year=None, ending_year=None,
                  sample_size=None, model=None):
     filtered = query
+    if not dirty:
+        filtered = query.filter(db.Document.clean == True)
     if ending_year is not None:
         filtered = filtered.filter(db.Document.year <= ending_year)
     if starting_year is not None:
         filtered = filtered.filter(db.Document.year >= starting_year)
     if model is not None:
-        set_status('%d documents met filtering criteria' % filtered.count())
+        documents_in_set = filtered.count()
+        model.documents_in_set = documents_in_set
+        set_status('%d documents met filtering criteria' % documents_in_set)
     if sample_size is not None:
         filtered = filtered.order_by(func.rand()).limit(sample_size)
     if model is not None:
-        set_status('%d documents were sampled' % filtered.count())
+        documents_sampled = filtered.count()
+        model.documents_sampled = documents_sampled
+        set_status('%d documents were sampled' % documents_sampled)
 
     return [doc.terms_list() for doc in filtered]
 
@@ -51,58 +57,52 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     term_counts = Counter(term for term in heatmap_terms if term in graph_terms)
     return term_counts
 
-
-def _handle_query(arg_dict, prefix):
-    author = '%s_author' % prefix
-    conference = '%s_conference' % prefix
-    journal = '%s_journal' % prefix
-    print prefix
-
-    if arg_dict.get(author):
-        name_like = arg_dict.get(author)
-        print name_like
-        query = db.Author.doc_query(name_like)
-    elif arg_dict.get(conference):
-        name_like = arg_dict.get(conference)
-        print name_like
-        query = db.Conference.doc_query(name_like)
-    elif arg_dict.get(journal):
-        name_like = arg_dict.get(journal)
-        print name_like
-        query = db.Journal.doc_query(name_like)
-    else:
-        print 'none'
-        query = db.Document.query
+def _create_query(author=None, conference=None, journal=None):
+    query = db.Document.query
+    if author:
+        query = db.Author.filter_document_query(query, author)
+    if journal:
+        query = db.Journal.filter_document_query(query, journal)
+    if conference:
+        query = db.Conference.filter_document_query(query, conference)
     return query
+
+
+def create_task_and_maps(task_parameters):
+    # set up new objects
+    basemap = Basemap(finished=False, **filter_basemap_args(task_parameters))
+    basemap.save()
+    heatmap = Heatmap(finished=False, **filter_heatmap_args(task_parameters))
+    heatmap.save()
+    task = Task(basemap=basemap, heatmap=heatmap)
+    task.save()
+    return task
 
 
 @task()
 def request_task(task_id, **kwargs):
-    basemap_query = _handle_query(kwargs, 'basemap')
-    heatmap_query = _handle_query(kwargs, 'heatmap')
-
     print 'requesting task', task_id
     task = Task.objects.get(id=task_id)
     print 'after getting task and basemap'
-    map_dict, graph_terms = make_basemap(task.basemap, basemap_query, **filter_basemap_args(kwargs))
+    map_dict, graph_terms = make_basemap(task.basemap)
     print 'making heatmap'
-    make_heatmap(task.heatmap, graph_terms, heatmap_query, **filter_heatmap_args(kwargs))
+    make_heatmap(task.heatmap, graph_terms)
     print 'done'
     return task_id
 
 
-def make_heatmap(heatmap, graph_terms, heatmap_query, heatmap_starting_year=None,
-                 heatmap_ending_year=None, heatmap_sample_size=None):
+def make_heatmap(heatmap, graph_terms):
     def _jsonready_heatmap_vals(heatmap_vals, term_to_str_fn=lambda tpl: ' '.join(tpl)):
         """Input: a dictionary of string tuples to values.
 
         Val: a dictionary of strings to values, where tuples have been separated by spaces"""
         return [{'term':' '.join(term), 'intensity':count} for (term, count) in heatmap_vals.items()]
     set_status('getting document list', model=heatmap)
+    heatmap_query= _create_query(author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
     filtered_query = filter_query(heatmap_query, dirty=True,
-                                  starting_year=heatmap_starting_year,
-                                  ending_year=heatmap_ending_year,
-                                  sample_size=heatmap_sample_size,
+                                  starting_year=heatmap.starting_year,
+                                  ending_year=heatmap.ending_year,
+                                  sample_size=heatmap.sample_size,
                                   model=heatmap)
     heatmap_terms = flatten(filtered_query)
     heatmap_vals = calculate_heatmap_values(heatmap_terms, graph_terms)
@@ -112,17 +112,24 @@ def make_heatmap(heatmap, graph_terms, heatmap_query, heatmap_starting_year=None
     heatmap.save()
     return heatmap_vals
 
-def make_basemap(basemap, basemap_query, basemap_starting_year=2000,
-                 basemap_ending_year=2013, basemap_sample_size=None, **kwargs):
-    print kwargs
+def make_basemap(basemap):
     set_status('getting document list', model=basemap)
+    basemap_query = _create_query(author=basemap.author, conference=basemap.conference, journal=basemap.journal)
     terms_in_docs = filter_query(basemap_query, dirty=False,
-                                 starting_year=basemap_starting_year,
-                                 ending_year=basemap_ending_year,
-                                 sample_size=basemap_sample_size,
+                                 starting_year=basemap.starting_year,
+                                 ending_year=basemap.ending_year,
+                                 sample_size=basemap.sample_size,
                                  model=basemap)
 
-    map_dict, graph_terms = map_representation(terms_in_docs, model=basemap, **kwargs)
+    map_dict, graph_terms = map_representation(terms_in_docs,
+                                               ranking_algorithm=basemap.ranking_algorithm,
+                                               similarity_algorithm=basemap.similarity_algorithm,
+                                               filtering_algorithm=basemap.filtering_algorithm,
+                                               number_of_terms=basemap.number_of_terms,
+                                               model=basemap)
+
+    with open('/tmp/graph_terms_django', 'w') as f:
+        f.write(str(graph_terms))
 
         # map_string will be a graphviz-processable string
     map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
@@ -138,17 +145,6 @@ def make_basemap(basemap, basemap_query, basemap_starting_year=2000,
     set_status('basemap complete', model=basemap)
     return map_dict, graph_terms
 
-
-def query_for_author(name_like):
-    return db.Document.query.join(db.Author, db.Document.authors).filter(db.Author.name.like(name_like))
-
-
-def query_for_conference(name_like):
-    return db.Document.query.join(db.Conference).filter(db.Conference.name.like(name_like))
-
-
-def query_for_journal(name_like):
-    return db.Document.query.join(db.Journal).filter(db.Journal.name.like(name_like))
 
 ranking_fns = [ranking.tfidf, ranking.cnc_bigrams, ranking.cnc_unigrams, ranking.tf]
 def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
@@ -289,9 +285,13 @@ def _make_arg_filter(passthrough_dict):
     passthrough_dict, cast to the type that arg is mapped to in passthrough_dict"""
     def filter_args(args):
         pass_args = {}
-        for arg, type_ in passthrough_dict.items():
-            if arg in args:
-                pass_args[arg] = type_(args[arg])
+        for arg_name, maps_to in passthrough_dict.items():
+            if type(maps_to) is tuple:
+                type_, new_arg_name = maps_to
+            else:
+                type_, new_arg_name = maps_to, arg_name
+            if arg_name in args:
+                pass_args[new_arg_name] = type_(args[arg_name])
         return pass_args
     return filter_args
 
@@ -299,13 +299,16 @@ def _make_arg_filter(passthrough_dict):
 be passed as keyword args to basemake_map"""
 filter_basemap_args = _make_arg_filter(
     {
-        'basemap_ending_year': int,
-        'basemap_sample_size': int,
-        'basemap_starting_year': int,
+        'basemap_ending_year': (int, "ending_year"),
+        'basemap_sample_size': (int, "sample_size"),
+        'basemap_starting_year': (int, "starting_year"),
         'number_of_terms': int,
         'ranking_algorithm': int,
         'similarity_algorithm': int,
-        'filtering_algorithm': int
+        'filtering_algorithm': int,
+        'basemap_author': (str, 'author'),
+        'basemap_conference': (str, 'conference'),
+        'basemap_journal': (str, 'journal'),
     }
 )
 
@@ -313,8 +316,11 @@ filter_basemap_args = _make_arg_filter(
 be passed as keyword args to heatmap_map"""
 filter_heatmap_args = _make_arg_filter(
     {
-        'heatmap_starting_year': int,
-        'heatmap_ending_year': int,
-        'heatmap_sample_size': int
+        'heatmap_starting_year': (int, "starting_year"),
+        'heatmap_ending_year': (int, "ending_year"),
+        'heatmap_sample_size': (int, "sample_size"),
+        'heatmap_author': (str, 'author'),
+        'heatmap_conference': (str, 'conference'),
+        'heatmap_journal': (str, 'journal')
     }
 )

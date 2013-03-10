@@ -1,13 +1,13 @@
-from lib.pipeline import request_task
+from lib.pipeline import request_task, create_task_and_maps
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse
-from maps.models import Task, Basemap, Heatmap, create_task_and_maps
+from maps.models import Task, Basemap, Heatmap
 # Create your views here.
 
 def request_map(request):
     if request.method == 'POST':
-        task = create_task_and_maps()
+        task = create_task_and_maps(dict(request.POST.items()))
         request_task.delay(task.id, **dict(request.POST.items()))
         return redirect('display_map', task.id)
 
