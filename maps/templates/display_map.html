@@ -16,34 +16,35 @@
 var lastupdate = 0;
 // call getData when the document has loaded
 $(document).ready(function(){
-    getStatus();
+    getBasemap();
 });
 // execute ajax call to server.py
-function getStatus() {
+function getBasemap() {
     $.ajax({
+        dataType: "json",
         type: "GET",
         // set the destination for the query
-        url: '{% url maps.views.task_status data.task_id %}',
+        url: '{% url maps.views.basemap_metadata data.basemap_id %}',
         async: true,
         cache: false,
         // timeout after 5 minutes
         timeout:300000,
         // process a successful response
-        success: function(response) {
+        success: function(basemap_metadata) {
             // append the message list with the new message
-            $('#status').text(response);
-            if (response == 'complete') {
+            $('#status').text(basemap_metadata.status);
+            if (basemap_metadata.finished) {
                 $('#status').hide();
-                init_map("{% url maps.views.basemap data.basemap_id %}");
+                init_map("{% url maps.views.basemap data.basemap_id %}", basemap_metadata.width, basemap_metadata.height);
             }
             else {
-                setTimeout(getStatus, 2000);
+                setTimeout(getBasemap, 2000);
             }
         },
         // handle error
         error: function(XMLHttpRequest, textStatus, errorThrown){
             // try again in 10 seconds if there was a request error
-            setTimeout(getStatus, 10000);
+            setTimeout(getBasemap, 10000);
         },
     });
 }
@@ -140,7 +141,7 @@ function highlightNode(nodeName, radius, intensity) {
     }
 }
 
-function init_map(map_url) {
+function init_map(map_url, width, height) {
     map = new OpenLayers.Map ("map", {
         controls:[
             new OpenLayers.Control.Navigation(),
@@ -149,7 +150,7 @@ function init_map(map_url) {
             new OpenLayers.Control.Attribution()
         ]
         });
-    var bounds = new OpenLayers.Bounds(0, -3080, 4320, 0);
+    var bounds = new OpenLayers.Bounds(0, -1 * height, width, 0);
     var mocs = new OpenLayers.Layer.ScalableInlineXhtml(
         "MoCS",
         map_url,

@@ -125,17 +125,10 @@ def make_basemap(basemap, basemap_query, basemap_starting_year=2000,
     map_dict, graph_terms = map_representation(terms_in_docs, model=basemap, **kwargs)
 
         # map_string will be a graphviz-processable string
-    map_string = write_dot.output_pairs_dict(map_dict, True)
+    map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
     # save to database
     basemap.dot_rep = map_string
-    try:
-        basemap.save()
-    except Exception as e:
-        print e
-        with open('/tmp/map_string', 'w') as f:
-            f.write(map_string)
-        with open('/tmp/map_dict', 'w') as f:
-            f.write(str(map_dict))
+    basemap.save()
     svg_str, width, height = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
     basemap.svg_rep = svg_str
     basemap.width = width

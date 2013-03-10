@@ -1,4 +1,5 @@
 from django.db import models
+from json import dumps
 
 # Create your models here.
 class Basemap(models.Model):
@@ -6,8 +7,19 @@ class Basemap(models.Model):
     svg_rep = models.TextField()
     finished = models.BooleanField()
     status = models.TextField()
-    height = models.FloatField()
-    width = models.FloatField()
+    height = models.FloatField(null=True, blank=True)
+    width = models.FloatField(null=True, blank=True)
+
+    def metadata(self):
+        return {
+            'status': self.status,
+            'height': self.height,
+            'width': self.width,
+            'finished': self.finished
+        }
+
+    def json_metadata(self):
+        return dumps(self.metadata())
 
 class Heatmap(models.Model):
     terms = models.TextField()
