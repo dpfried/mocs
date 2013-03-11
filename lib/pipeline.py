@@ -128,10 +128,7 @@ def make_basemap(basemap):
                                                number_of_terms=basemap.number_of_terms,
                                                model=basemap)
 
-    with open('/tmp/graph_terms_django', 'w') as f:
-        f.write(str(graph_terms))
-
-        # map_string will be a graphviz-processable string
+    # map_string will be a graphviz-processable string
     map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
     # save to database
     basemap.dot_rep = map_string
