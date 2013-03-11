@@ -1,16 +1,19 @@
 import djcelery
 djcelery.setup_loader()
-# Django settings for mtbolt project.
-
-# celery settings
-BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_IMPORTS = ('lib.pipeline',)
+# Django settings for mocs project.
 
 def abspath(*args):
     """get an absolute path relative to the project's root"""
     import os
     currpath = os.path.dirname(__file__)
     return os.path.abspath(os.path.join(currpath, '.', *args))
+
+
+# celery settings
+BROKER_URL = 'amqp://guest:guest@localhost:5672//'
+CELERY_IMPORTS = ('lib.pipeline',)
+CELERY_PID_FILENAME = abspath('celeryd.pid')
+CELERY_LOG_FILENAME = abspath('celeryd.log')
 
 DEBUG = True
 
