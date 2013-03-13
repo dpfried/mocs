@@ -29,19 +29,19 @@ class CorpusRanker:
             return 0
 
 def tf(phrase_lists):
-    fd = FreqDist(tuple(p) for p in phrase_lists)
+    phrase_frequencies = FreqDist(tuple(p) for p in phrase_lists)
     scored = {}
-    for phrase, freq in fd.iteritems():
+    for phrase, freq in phrase_frequencies.iteritems():
         scored[phrase] = freq
-    return scored
+    return scored, phrase_frequencies
 
 def tfidf(phrase_lists, corpus=nltk.corpus.brown.words(), ngram_range=(1, 6)):
     ranker = CorpusRanker(corpus, ngram_range)
-    fd = FreqDist(tuple(p) for p in phrase_lists)
-    scored = {}
-    for phrase, freq in fd.iteritems():
-        scored[phrase] = ranker.score(phrase, freq)
-    return scored
+    phrase_frequencies = FreqDist(tuple(p) for p in phrase_lists)
+    phrase_scores = {}
+    for phrase, freq in phrase_frequencies.iteritems():
+        phrase_scores[phrase] = ranker.score(phrase, freq)
+    return phrase_scores, phrase_frequencies
 
 def cnc_unigrams(phrase_lists):
     return cnc(phrase_lists, include_unigrams=True)
@@ -64,12 +64,17 @@ def cnc(phrase_lists, c_value_threshold = 0, include_unigrams = False, weight_by
     # word -> C-value(word)
     phrase_scores = {}
 
+    # word -> num occurrences(word)
+    phrase_frequencies = FreqDist()
+
     # word -> (t(word), c(word))
     sub_phrase_scores = {}
 
     # traverse from longest phrases to shortest
     for length, frequency_dist in sorted(frequency_dists_by_length.items(), \
                                          key=lambda pair: pair[0], reverse=True):
+        # update global frequency counts with all counts of this length
+        phrase_frequencies.update(frequency_dist)
         # within each phrase length, traverse from most common phrases to least
         for phrase, frequency in frequency_dist.iteritems():
             if phrase in sub_phrase_scores:
@@ -93,4 +98,4 @@ def cnc(phrase_lists, c_value_threshold = 0, include_unigrams = False, weight_by
                     else:
                         t, c = 0, 0
                     sub_phrase_scores[sub_phrase] = t + frequency, c + 1
-    return phrase_scores
+    return phrase_scores, phrase_frequencies

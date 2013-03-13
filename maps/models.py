@@ -28,6 +28,8 @@ class Basemap(models.Model):
     documents_in_set = models.IntegerField(null=True, blank=True)
     documents_sampled = models.IntegerField(null=True, blank=True)
 
+    phrase_frequencies = models.TextField()
+
     def metadata(self):
         return {
             'status': self.status,

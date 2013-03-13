@@ -36,3 +36,10 @@ def first(fn, seq):
 def flatten(lists):
     """flatten a list of lists by one level. [[1,2], [3,4], [[5],6]] -> [1,2,3,4,[5],6]"""
     return [x for lst in lists for x in lst]
+
+def jsonize_phrase_dict(phrase_dict, val_string='frequency', term_to_str_fn=lambda tpl: ' '.join(tpl)):
+    """Input: a dictionary of string tuples to values.
+
+    Val: a dictionary of strings to values, where tuples have been separated by spaces"""
+    return [{'term':term_to_str_fn(term), val_string:val}
+            for (term, val) in phrase_dict.items()]

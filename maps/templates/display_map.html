@@ -14,82 +14,88 @@
 // variable to keep track of the last time we received data
 // a time value will be sent back with the response in a unix timestamp format
 var lastupdate = 0;
-// call getData when the document has loaded
+// times in milliseconds
+var basemap_poll_timeout = 2000;
+var basemap_retry_timeout = 10000;
+var basemap_error_timeout = 300000;
+var heatmap_poll_timeout = 1000;
+var heatmap_retry_timeout = basemap_retry_timeout;
+var heatmap_error_timeout = basemap_error_timeout;
+
+var heatmap_intensity = 0.08;
+var heatmap_default_opacity = 0.6;
+var heatmap_scaling_factor = 40;
+
+var heatmap_metadata;
+var basemap_metadata;
+
+var delay = 0;
+var delta_delay = 500;
+
 $(document).ready(function(){
-    getBasemap();
+    get_basemap_status();
 });
-// execute ajax call to server.py
-function getBasemap() {
+
+function get_basemap_status() {
     $.ajax({
         dataType: "json",
         type: "GET",
-        // set the destination for the query
         url: '{% url maps.views.basemap_metadata data.basemap_id %}',
         async: true,
         cache: false,
-        // timeout after 5 minutes
-        timeout:300000,
-        // process a successful response
-        success: function(basemap_metadata) {
-            // append the message list with the new message
+        timeout:basemap_error_timeout,
+        success: function(data) {
+            basemap_metadata = data;
             $('#status').text(basemap_metadata.status);
             if (basemap_metadata.finished) {
                 $('#status').hide();
-                init_map("{% url maps.views.basemap data.basemap_id %}", basemap_metadata.width, basemap_metadata.height);
+                display_basemap("{% url maps.views.basemap data.basemap_id %}", basemap_metadata.width, basemap_metadata.height);
             }
             else {
-                setTimeout(getBasemap, 2000);
+                setTimeout(get_basemap_status, basemap_poll_timeout);
             }
         },
         // handle error
         error: function(XMLHttpRequest, textStatus, errorThrown){
             // try again in 10 seconds if there was a request error
-            setTimeout(getBasemap, 10000);
+            setTimeout(get_basemap_status, basemap_retry_timeout);
         },
     });
 }
 
-function getHeatmap() {
+function get_heatmap_status() {
     $.ajax({
         type: "GET",
-        // set the destination for the query
-        url: '{% url maps.views.heatmap data.heatmap_id %}',
+        url: '{% url maps.views.heatmap_metadata data.heatmap_id %}',
         async: true,
         cache: false,
-        // timeout after 5 minutes
-        timeout:300000,
-        // process a successful response
-        success: function(response) {
-            if (response != 'pending') {
-                var term_list = $.parseJSON(response);
-                highlightTerms(term_list);
+        timeout: heatmap_error_timeout,
+        success: function(data) {
+            heatmap_metadata = data;
+            if (heatmap_metadata.finished) {
+                display_heatmap('{% url maps.views.heatmap data.heatmap_id %}');
             }
             else {
-                setTimeout(getHeatmap, 1000);
+                setTimeout(get_heatmap_status, heatmap_poll_timeout);
             }
         },
-        // handle error
         error: function(XMLHttpRequest, textStatus, errorThrown){
-            // try again in 10 seconds if there was a request error
-            setTimeout(getHeatmap, 10000);
+            setTimeout(get_heatmap_status, heatmap_retry_timeout);
         },
     });
-
 }
+
 OpenLayers.ImgPath = "http://js.mapbox.com/theme/dark/";
 var map; //OpenLayers.Map
 var heatmap;
 
-function getNode(text) {
+function get_node(text) {
     return $(".node").filter(function() {
             return $(this).children('title').text() == text;
             })
 }
 
-var delay = 0;
-var delta_delay = 500;
-function highlightTerms(term_list) {
-    //console.debug(term_list);
+function highlight_terms(term_list) {
     /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
     var scaling_factor = term_list.map(function(d) { return d.intensity; })
         .reduce(function(p, c) { return Math.max(p,c); });
@@ -97,53 +103,46 @@ function highlightTerms(term_list) {
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
     if (svg.length == 0) {
         delay += delta_delay;
-        setTimeout(highlightTerms, delay, term_list)
+        setTimeout(highlight_terms, delay, term_list)
     }
     else {
         term_list.map(function (term) {
-                highlightNode(term.term, term.radius, term.intensity / scaling_factor);
+                highlight_node(term.term, term.radius, term.intensity / scaling_factor);
                 });
-        heatmap.redraw();
+        rescale_heatmap();
     }
 }
 
-function highlightNode(nodeName, radius, intensity) {
-    //console.debug(nodeName);
-    //console.debug(radius);
-    console.debug(intensity);
+var ctm;
+function highlight_node(name, radius, intensity) {
     var svg = $('svg')[0];
     var pt = svg.createSVGPoint();
-    var node = getNode(nodeName);
-    //var ctm;
+    var node = get_node(name);
     if (node.length > 0) {
-        //console.debug('node found:');
-        //console.debug(nodeName);
         var text_element = node.children('text').first();
         var x = text_element.attr('x');
         var y = text_element.attr('y');
-        //console.debug(x);
-        //console.debug(y);
         pt.x = x;
         pt.y = y;
-        /*
         if (ctm == null) {
             var txt = text_element[0];
             ctm = txt.getTransformToElement(svg);
         }
-        */
-        var txt = node.children('text')[0];
-        var ctm = txt.getTransformToElement(svg);
-        var transformedPoint = pt.matrixTransform(ctm);
-        //console.debug(transformedPoint);
-        heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(transformedPoint.x, -1*transformedPoint.y), radius, intensity));
+        var transformed_point = pt.matrixTransform(ctm);
+        heatmap.addSource(new Heatmap.Source(new OpenLayers.LonLat(transformed_point.x, -1*transformed_point.y), radius, intensity));
         }
     else {
-        //console.debug('node not found:');
-        //console.debug(nodeName);
+        console.debug('node not found:');
+        console.debug(name);
     }
 }
 
-function init_map(map_url, width, height) {
+function rescale_heatmap() {
+    heatmap.defaultRadius = heatmap_scaling_factor * map.zoom;
+    heatmap.redraw();
+}
+
+function display_basemap(basemap_url, width, height) {
     map = new OpenLayers.Map ("map", {
         controls:[
             new OpenLayers.Control.Navigation(),
@@ -155,9 +154,8 @@ function init_map(map_url, width, height) {
     var bounds = new OpenLayers.Bounds(0, -1 * height, width, 0);
     var mocs = new OpenLayers.Layer.ScalableInlineXhtml(
         "MoCS",
-        map_url,
+        basemap_url,
         bounds,
-        //new OpenLayers.Size(1000, 1000),
         null,
         {isBaseLayer: true,
             opacity: '1.0'}
@@ -165,11 +163,14 @@ function init_map(map_url, width, height) {
     var svg = $('svg');
     mocs.adjustBounds(bounds);
     heatmap = new Heatmap.Layer("Heatmap");
-    heatmap.defaultRadius = 40;
-    heatmap.defaultIntensity = 0.08;
-    heatmap.setOpacity(0.8);
+    heatmap.defaultRadius = heatmap_scaling_factor;
+    heatmap.defaultIntensity = heatmap_intensity;
+    heatmap.setOpacity(heatmap_default_opacity);
     map.addLayers([mocs, heatmap]);
     map.zoomToExtent(bounds);
+    map.events.on({ 
+            "zoomend": rescale_heatmap,
+            });
 
     var ov_options = {
               //layers: [mocs],
@@ -189,28 +190,43 @@ function init_map(map_url, width, height) {
             heatmap.redraw();
     }
     });
-    $("#radius-slider").slider({
+    $("#opacity-slider").slider({
     min: 0,
-    max: 500,
-    step: 1,
-    value: heatmap.defaultRadius,
+    max: 1,
+    step: 0.01,
+    value: heatmap_default_opacity,
     change: function(event, ui) {
-        heatmap.defaultRadius = ui.value;
-        heatmap.redraw();
-    }
+        heatmap.setOpacity(ui.value);
+        }
     });
-
-    getHeatmap();
-
+    get_heatmap_status();
 } 
-    </script>
+
+function display_heatmap(heatmap_url) {
+    $.ajax({
+        dataType: "json",
+        type: "GET",
+        url: heatmap_url,
+        async: true,
+        cache: false,
+        timeout:heatmap_error_timeout,
+        success: function(heatmap_data) {
+            highlight_terms(heatmap_data);
+        },
+        error: function(XMLHttpRequest, textStatus, errorThrown){
+            // try again in 10 seconds if there was a request error
+            setTimeout(get_heatmap_status, heatmap_retry_timeout);
+        },
+    });
+}
+</script>
 {% endblock %}
 
 {% block content %}
     <div id='status'></div>
-    <div id='map' style='height:800px'></div>
-    radius
-    <div id='radius-slider' style='margin:1em'></div>
-    intensity
+    <div id='map' style='height:600px'></div>
+    heatmap opacity
+    <div id='opacity-slider' style='margin:1em'></div>
+    heatmap intensity
     <div id='intensity-slider' style='margin:1em'></div>
 {% endblock %}

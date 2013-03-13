@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from utils import sub_lists
+from utils import sub_lists, jsonize_phrase_dict
 import database as db
 import filtering
 # import pickle
@@ -92,11 +92,6 @@ def request_task(task_id, **kwargs):
 
 
 def make_heatmap(heatmap, graph_terms):
-    def _jsonready_heatmap_vals(heatmap_vals, term_to_str_fn=lambda tpl: ' '.join(tpl)):
-        """Input: a dictionary of string tuples to values.
-
-        Val: a dictionary of strings to values, where tuples have been separated by spaces"""
-        return [{'term':' '.join(term), 'intensity':count} for (term, count) in heatmap_vals.items()]
     set_status('getting document list', model=heatmap)
     heatmap_query= _create_query(author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
     filtered_query = filter_query(heatmap_query, dirty=True,
@@ -106,7 +101,7 @@ def make_heatmap(heatmap, graph_terms):
                                   model=heatmap)
     heatmap_terms = flatten(filtered_query)
     heatmap_vals = calculate_heatmap_values(heatmap_terms, graph_terms)
-    heatmap.terms = json.dumps(_jsonready_heatmap_vals(heatmap_vals))
+    heatmap.terms = json.dumps(jsonize_phrase_dict(heatmap_vals, 'intensity'))
     set_status('heatmap complete', model=heatmap)
     heatmap.finished = True
     heatmap.save()
@@ -121,17 +116,18 @@ def make_basemap(basemap):
                                  sample_size=basemap.sample_size,
                                  model=basemap)
 
-    map_dict, graph_terms = map_representation(terms_in_docs,
-                                               ranking_algorithm=basemap.ranking_algorithm,
-                                               similarity_algorithm=basemap.similarity_algorithm,
-                                               filtering_algorithm=basemap.filtering_algorithm,
-                                               number_of_terms=basemap.number_of_terms,
-                                               model=basemap)
+    map_dict, graph_terms, phrase_frequencies = map_representation(terms_in_docs,
+                                                                   ranking_algorithm=basemap.ranking_algorithm,
+                                                                   similarity_algorithm=basemap.similarity_algorithm,
+                                                                   filtering_algorithm=basemap.filtering_algorithm,
+                                                                   number_of_terms=basemap.number_of_terms,
+                                                                   model=basemap)
 
     # map_string will be a graphviz-processable string
     map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
     # save to database
     basemap.dot_rep = map_string
+    basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')
     basemap.save()
     svg_str, width, height = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
     basemap.svg_rep = svg_str
@@ -150,7 +146,7 @@ def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
     set_status('ranking with %s' % ranking_fn, model=model)
     if debug:
         print 'ranking with %s' % ranking_fn
-    scored_phrases = ranking_fn(flattened)
+    scored_phrases, phrase_frequencies = ranking_fn(flattened)
     set_status('ordering', model=model)
     if debug:
         print 'ordering'
@@ -185,9 +181,12 @@ def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
             if debug:
                 print 'found start words', found_start_words
 
-        return found_start_words + large_phrases
+        top_phrases = found_start_words + large_phrases
     else:
-        return large_phrases
+        top_phrases = large_phrases
+
+    filtered_frequencies = dict((phrase, freq) for (phrase, freq) in phrase_frequencies.items() if phrase in top_phrases)
+    return top_phrases, filtered_frequencies
 call_rank.functions = ranking_fns
 call_rank.default = ranking_fns.index(ranking.cnc_bigrams)
 
@@ -245,9 +244,9 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     if start_words is not None:
         # start words should be a list like ["machine learning", "artificial intelligence"]
         start_words = [tuple(s.split()) for s in start_words]
-        ranked_phrases = call_rank(ranking_algorithm, flattened, number_of_terms, start_words=start_words, model=model)
+        ranked_phrases, phrase_frequencies = call_rank(ranking_algorithm, flattened, number_of_terms, start_words=start_words, model=model)
     else:
-        ranked_phrases = call_rank(ranking_algorithm, flattened, number_of_terms, model=model)
+        ranked_phrases, phrase_frequencies = call_rank(ranking_algorithm, flattened, number_of_terms, model=model)
     if simplify_terms:
         structured_nps = simplification.term_replacement(structured_nps, ranked_phrases)
     set_status('calculating similarity', model=model)
@@ -259,7 +258,7 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     for term, lst in normed.items():
         graph_terms.add(term)
         graph_terms.update(term for term, val in lst)
-    return normed, graph_terms
+    return normed, graph_terms, phrase_frequencies
 
 
 def call_graphviz(map_string, file_format='svg', model=None):
