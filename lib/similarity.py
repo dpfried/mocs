@@ -3,7 +3,7 @@ from utils import hashable
 from partial_match_dict import PartialMatchDict
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
-from scipy.sparse import lil_matrix, csc_matrix
+from scipy.sparse import lil_matrix
 from numpy import log
 # from sparsesvd import sparsesvd
 
@@ -63,8 +63,8 @@ def _pmi_on_row(A, B):
 
     return log(p_ab) - log(p_a) - log(p_b)
 
-def pointwise_mutual_information(structured_phrases, phrases_to_score):
-    M, indices, phrases = _document_matrix(structured_phrases, phrases_to_score)
+def pointwise_mutual_information(structured_phrases, phrases_to_score, status_callback=None):
+    M, indices, phrases = _document_matrix(structured_phrases, phrases_to_score, status_callback=None)
 
     if debug:
         print 'pairwise distance'
@@ -74,7 +74,7 @@ def pointwise_mutual_information(structured_phrases, phrases_to_score):
     pairwise_similarity = squareform(1 - pairwise_distance)
     return pairwise_similarity, phrases
 
-def distributional_js(structured_phrases, phrases_to_score):
+def distributional_js(structured_phrases, phrases_to_score, status_callback=None):
     """ Calculate distributional similarity between phrases_to_score using the
     contexts in structured_phrases and Jensen-Shannon divergence as the distance
     metric between contexts """
@@ -154,7 +154,7 @@ def distributional_js(structured_phrases, phrases_to_score):
                 print most_similar_val, score_phrases[i], score_phrases[most_similar]
     return np.asarray(pairwise_distances.todense()), score_phrases
 
-def _document_matrix(structured_phrases, phrases_to_score):
+def _document_matrix(structured_phrases, phrases_to_score, status_callback=None):
     indices = {}
     phrases = {}
 
@@ -166,9 +166,18 @@ def _document_matrix(structured_phrases, phrases_to_score):
     # sparsesvd requires csc format of sparse matrix
     M = lil_matrix((len(phrases_to_score), len(structured_phrases)))
 
-    if debug:
-        print 'document matrix'
+    count = 0
+    length = len(structured_phrases)
+    increment = length / 100
+
+    def do_callback():
+        pct_format = lambda percent: 'building document matrix: %.0f%% done' % (percent * 100)
+        if status_callback and count % increment == 0:
+            status_callback(pct_format(float(count) / length))
+
     for doc_index, doc in enumerate(structured_phrases):
+        do_callback()
+        count = doc_index
         for phrase in doc:
             h = hashable(phrase)
             if h in indices:
@@ -176,23 +185,23 @@ def _document_matrix(structured_phrases, phrases_to_score):
     return M.todense(), indices, phrases
 
 
-def lsa(structured_phrases, phrases_to_score):
+def lsa(structured_phrases, phrases_to_score, status_callback=None):
     """ Calculate similarity between phrases_to_score using structured_phrases to
     build term-document matrix and latent semantic analysis for similarity """
     M, indices, phrases = _document_matrix(structured_phrases, phrases_to_score)
     # would performing TFIDF here improve performance?
 
-    if debug:
-        print 'svd'
+    if status_callback:
+        status_callback('performing singular value decomposition')
     U, S, V = np.linalg.svd(M,full_matrices=False)
     # sparsesvd is slow as hell
     # U, S, V = sparsesvd(M, len(phrases_to_score))
 
-    if debug:
-        print 'pairwise distance'
+    if status_callback:
+        status_callback('calculating pairwise cosine distance')
     pairwise_distance = pdist(np.dot(U, np.diag(S)), metric='cosine')
     if debug:
-        print 'pairwise similarity'
+        status_callback('calculating similarity matrix')
     pairwise_similarity = squareform(1 - pairwise_distance)
     return pairwise_similarity, phrases
 
@@ -275,5 +284,3 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
     union = np.array([phrase_count,]*N) + np.array([phrase_count,]*N).transpose() - intersection
     jaccard = intersection / union
     return jaccard, phrases
-
-# Calculate based on term similarity. conditional probability of one phrase given another or mutual info

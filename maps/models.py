@@ -20,6 +20,7 @@ class Basemap(models.Model):
     similarity_algorithm = models.IntegerField()
     filtering_algorithm = models.IntegerField()
     number_of_terms = models.IntegerField()
+    term_type = models.IntegerField()
 
     author = models.CharField(max_length=255)
     conference = models.CharField(max_length=255)
@@ -47,7 +48,8 @@ class Basemap(models.Model):
             'conference': self.conference,
             'journal': self.journal,
             'documents_in_set': self.documents_in_set,
-            'documents_sampled': self.documents_sampled
+            'documents_sampled': self.documents_sampled,
+            'term_type': self.term_type
         }
 
     def json_metadata(self):
@@ -62,6 +64,7 @@ class Heatmap(models.Model):
     starting_year = models.IntegerField()
     ending_year = models.IntegerField()
     sample_size = models.IntegerField()
+    term_type = models.IntegerField()
 
     author = models.CharField(max_length=255)
     conference = models.CharField(max_length=255)
@@ -81,7 +84,8 @@ class Heatmap(models.Model):
             'conference': self.conference,
             'journal': self.journal,
             'documents_in_set': self.documents_in_set,
-            'documents_sampled': self.documents_sampled
+            'documents_sampled': self.documents_sampled,
+            'term_type': self.term_type
         }
 
     def json_metadata(self):

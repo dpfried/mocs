@@ -8,18 +8,21 @@ np_parser = nltk.RegexpParser(np_grammar)
 stemmer = None
 
 # exclude phrases containing these words
-stop_words = ['new', 'novel', 'study', 'isbn']
+STOP_WORDS = ['new', 'novel', 'study', 'isbn', '.', '(', ')', '[', ']']
 
 debug = False
 
 def ok_phrase(phrase):
     """check to see if a phrase contains stop words or is just a single character, like ( or )"""
-    for s in stop_words:
+    if len(phrase) == 1 and len(phrase[0]) == 1:
+        return False
+    for s in STOP_WORDS:
         if s in phrase:
             return False
-    return len(phrase) != 1 or len(phrase[0]) != 1
+    return True
 
 def noun_phrases(document, stem=False):
+    # document here is a string. Fix this!
     """given a text string, extract the noun phrases from it. Case sensitive,
     so may be best to lowercase Anything Capitalized Like This. If stem,
     will run Porter stemmer to prune words down to base roots"""

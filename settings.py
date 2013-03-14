@@ -11,7 +11,7 @@ def abspath(*args):
 
 # celery settings
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_IMPORTS = ('lib.pipeline',)
+CELERY_IMPORTS = ('lib.web_interface',)
 CELERY_PID_FILENAME = abspath('celeryd.pid')
 CELERY_LOG_FILENAME = abspath('celeryd.log')
 
