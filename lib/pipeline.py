@@ -201,7 +201,7 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     set_status('calculating similarity', model=model)
     sim_matrix, phrase_lookups = call_similarity(similarity_algorithm, structured_nps, ranked_phrases, model=model, status_callback=lambda s: set_status(s, model=model))
     phrase_pairs = call_filter(filtering_algorithm,  sim_matrix, phrase_lookups, model=model)
-    normed = similarity.process_dict(phrase_pairs)
+    normed = similarity.similarity_dict_to_distance(phrase_pairs)
     # build set of terms in graph
     graph_terms = set()
     for term, lst in normed.items():

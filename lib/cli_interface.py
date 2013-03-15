@@ -20,7 +20,8 @@ def make_map(query, only_terms=False, file_format='svg',
 
     if evaluation_output_path:
         import evaluation
-        evaluation.plot_phrase_frequencies(phrase_frequencies, output_path=evaluation_output_path)
+        evaluation.plot_phrase_frequencies(phrase_frequencies, evaluation_output_path)
+        evaluation.plot_edge_weight_distribution(map_dict, evaluation_output_path)
 
     if only_terms:
         return '\n'.join(sorted([' '.join(tpl) for tpl in graph_terms]))
@@ -49,7 +50,7 @@ def map_args(args):
 if __name__ == "__main__":
     """takes a map using the given parameters, and prints to standard out"""
     import argparse
-    parser = argparse.ArgumentParser(description="query map and print SVG representation to standard out")
+    parser = argparse.ArgumentParser(description="make map and print to standard out")
     parser.add_argument('--starting_year', type=int, help='starting year for query (inclusive)')
     parser.add_argument('--ending_year', type=int, help='ending year for query (inclusive)')
     parser.add_argument('--sample_size', default=30000, type=int, help='number of rows to sample')

@@ -9,32 +9,19 @@ from numpy import log
 
 debug = False
 
-def similarity_to_distance(sim_matrix, base=1):
-    """ convert a similarity matrix, with values ranging from 0 (not similar)
-    to 1 (completely similar) to a distance matrix, using Sankar's formula """
-    return 10 * (base / (base + sim_matrix))
+def similarity_to_distance(similarity, scaling_factor=10, smoothing_val=.1):
+    # return 10 * (base / (base + sim_matrix))
+    return scaling_factor * -1 * log((1-smoothing_val)*similarity + smoothing_val)
 
-def normalize(matrix):
-    """ ensure the max entry in the matrix is 1 """
-    return matrix / matrix.max()
-
-def process_dict(pairs_by_phrase):
-    max_similarity = 0
-    for phrase, pairs in pairs_by_phrase.iteritems():
-        if pairs == []:
-            max_in_lst = 0
-        else:
-            max_in_lst = max([pair[1] for pair in pairs])
-        max_similarity = max(max_similarity, max_in_lst)
-    if debug:
-        print max_similarity
+def similarity_dict_to_distance(pairs_by_phrase):
+    similarities = [pair[1] for adjacent in pairs_by_phrase.values() for pair in adjacent]
+    max_similarity = max(similarities)
 
     mapped = {}
     for phrase, pairs in pairs_by_phrase.iteritems():
         mapped[phrase] = [(p, similarity_to_distance(s / max_similarity)) \
                           for p, s in pairs]
     return mapped
-
 
 def kl_div(A,B):
     """ Kullback-Leibler divergence between two discrete probability
