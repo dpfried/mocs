@@ -120,6 +120,7 @@ INSTALLED_APPS = (
     'djcelery',
     'celerytest',
     'maps',
+    'dblp',
 )
 
 # A sample logging configuration. The only tangible logging
