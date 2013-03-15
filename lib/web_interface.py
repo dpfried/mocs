@@ -101,6 +101,7 @@ filter_basemap_args = _make_arg_filter(
         'basemap_author': (str, 'author'),
         'basemap_conference': (str, 'conference'),
         'basemap_journal': (str, 'journal'),
+        'basemap_term_type': (int, 'term_type'),
     }
 )
 
@@ -113,6 +114,7 @@ filter_heatmap_args = _make_arg_filter(
         'heatmap_sample_size': (int, "sample_size"),
         'heatmap_author': (str, 'author'),
         'heatmap_conference': (str, 'conference'),
-        'heatmap_journal': (str, 'journal')
+        'heatmap_journal': (str, 'journal'),
+        'heatmap_term_type': (int, 'term_type'),
     }
 )
