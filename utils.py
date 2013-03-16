@@ -1,5 +1,6 @@
 from django.utils import simplejson
 from django.http import HttpResponse
+from re import sub, compile
 
 # as seen at https://coderwall.com/p/k8vb_a
 def json_response(func):
@@ -22,3 +23,13 @@ def json_response(func):
             data = simplejson.dumps(str(objects))
         return HttpResponse(data, "application/json")
     return decorator
+
+generalize_pattern = compile(r'[\s\.]+')
+
+def generalize(query_string):
+    generalized = sub(generalize_pattern, '%', query_string)
+    if not generalized.startswith('%'):
+        generalized = '%' + generalized
+    if not generalized.endswith('%'):
+        generalized = generalized + '%'
+    return generalized
