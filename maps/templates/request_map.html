@@ -48,10 +48,7 @@
                     source: '{% url top_journals %}',
                     minLength: 3,
                     });
-                $('#basemap').accordion({
-                    collapsible:true
-                    });
-                $('#heatmap').accordion({
+                $('#maps').accordion({
                     collapsible:true
                     });
                 $('#submit').button();
@@ -145,7 +142,7 @@
 {% block content %}
 <form method="post" action='{% url request_map %} '>
     {% csrf_token %}
-    <div id='basemap'>
+    <div id='maps'>
         <h3>Basemap</h3>
         <div id='basemap_inner'>
             <label for='basemap_starting_year'>Starting Year:</label>
@@ -191,8 +188,6 @@
             <label for='basemap_journal'>Journal:</label><br>
             <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
         </div>
-    </div>
-    <div id='heatmap'>
         <h3>Heatmap</h3>
         <div id='heatmap_inner'>
             <label for='heatmap_starting_year'>Starting Year:</label>
