@@ -7,13 +7,6 @@ from utils import flatten, jsonize_phrase_dict
 import write_dot
 import json
 
-@task()
-def request_task(task_id):
-    task = Task.objects.get(id=task_id)
-    map_dict, graph_terms = make_basemap(task.basemap)
-    heatmap_vals = make_heatmap(task.heatmap, graph_terms)
-    return task_id
-
 def create_task_and_maps(task_parameters):
     # set up new objects
     basemap = Basemap(finished=False, **filter_basemap_args(task_parameters))
@@ -23,6 +16,12 @@ def create_task_and_maps(task_parameters):
     task = Task(basemap=basemap, heatmap=heatmap)
     task.save()
     return task
+
+@task(ignore_result=True)
+def request_task(task_id):
+    task = Task.objects.get(id=task_id)
+    map_dict, graph_terms = make_basemap(task.basemap)
+    heatmap_vals = make_heatmap(task.heatmap, graph_terms)
 
 def make_heatmap(heatmap, graph_terms):
     set_status('getting document list', model=heatmap)

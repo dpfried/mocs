@@ -73,9 +73,8 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     graph_terms"""
     term_counts = Counter()
     for term in heatmap_terms:
-        print hashable(term)
-        print hashable(term) in graph_terms
-        term_counts[hashable(term)] += 1
+        if hashable(term) in graph_terms:
+            term_counts[hashable(term)] += 1
     # term_counts = Counter(term for term in heatmap_terms if hashable(term) in graph_terms)
     return term_counts
 
