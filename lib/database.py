@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, Boolean, UnicodeText, Table, ForeignKey, func
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import _declarative_constructor
 from mocs_config import SQL_CONNECTION
@@ -9,10 +9,7 @@ echo = False
 
 ### setting up sqlalchemy stuff ###
 engine = create_engine(SQL_CONNECTION, echo=echo)
-
-Session = sessionmaker()
-Session.configure(bind=engine)
-session = Session()
+Session = scoped_session(sessionmaker(bind=engine))
 
 
 def create_all():
@@ -37,7 +34,7 @@ class Base(object):
     @ClassProperty
     @classmethod
     def query(cls):
-        return session.query(cls)
+        return Session.query(cls)
 
     # like in elixir
     @classmethod
@@ -112,7 +109,7 @@ class Author(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        return session.query(Author,
+        return Session.query(Author,
                              func.count(author_document_table.c.document_id).label('doc_count'))\
                 .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
 
@@ -131,10 +128,10 @@ class Journal(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        stmt = session.query(Document.journal_id, func.count('*').label('doc_count'))\
+        stmt = Session.query(Document.journal_id, func.count('*').label('doc_count'))\
                 .group_by(Document.journal_id)\
                 .subquery()
-        return session.query(Journal, stmt.c.doc_count)\
+        return Session.query(Journal, stmt.c.doc_count)\
                 .filter(Journal.name.like(name_like))\
                 .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
                 .order_by('doc_count DESC').slice(0, n).all()
@@ -156,10 +153,10 @@ class Conference(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        stmt = session.query(Document.conference_id, func.count('*').label('doc_count'))\
+        stmt = Session.query(Document.conference_id, func.count('*').label('doc_count'))\
                 .group_by(Document.conference_id)\
                 .subquery()
-        return session.query(Conference, stmt.c.doc_count)\
+        return Session.query(Conference, stmt.c.doc_count)\
                 .filter(Conference.name.like(name_like))\
                 .outerjoin(stmt, Conference.id == stmt.c.conference_id)\
                 .order_by('doc_count DESC').slice(0, n).all()
