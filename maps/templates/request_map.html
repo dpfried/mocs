@@ -47,11 +47,77 @@
                     collapsible:true
                     });
                 $('#submit').button();
+		var bringInTooltip = function(event){
+			$( "#infobox" ).position({
+				my: "left+40%",
+				of: $(this),
+				collision: "fit"
+			  });
+			if ($(this).attr("id") == "starting_year" || ($(this).attr("for") == "starting_year")){
+				$("#infobox").html("<b>Starting Year:</b><br>Only include documents published in this year or later.");
+			}
+			if ($(this).attr("id") == "ending_year" || ($(this).attr("for") == "ending_year")){
+				$("#infobox").html("<b>Ending Year:</b><br>Only include documents published in this year or earlier.");
+			}
+			if ($(this).attr("id") == "sample_size" || ($(this).attr("for") == "sample_size")){
+				$("#infobox").html("<b>Number of Documents:</b><br>Number of documents to include in random sample.");
+			}
+			if ($(this).attr("id") == "number_of_terms" || ($(this).attr("for") == "number_of_terms")){
+				$("#infobox").html("<b>Number of Terms:</b><br> Control number of top terms (after ranking) to pass to similarity algorithm.");
+			}
+			if ($(this).attr("id") == "ranking" || ($(this).attr("for") == "ranking")){
+				if ($("#TFICF").attr("selected") == "selected"){
+					$("#infobox").html("<b>Ranking Algorithm:</b><br>TF/ICF:<br>(Term Frequency/Inverse Corpus Frequency) Rank terms by the number of occurrences in the document titles, divided by 1 + the number of occurrences in the Brown corpus");
+				}
+
+				if ($("#CV").attr("selected") == "selected"){
+					$("#infobox").html("<b>Ranking Algorithm:</b><br>C-Value:<br> Rank by frequency, prioritizing nested terms (see <a href='http://link.springer.com/article/10.1007%2Fs007999900023'>Frantzi et. al</a> for details). Excludes unigrams (single-word terms)");
+				}
+				if ($("#CVU").attr("selected") == "selected"){
+					$("#infobox").html("<b>Ranking Algorithm:</b><br>C-Value With Unigrams:<br> Rank by frequency, prioritizing nested terms (see <a href='http://link.springer.com/article/10.1007%2Fs007999900023'>Frantzi et. al</a> for details). Includes unigrams (single-word terms)");
+				}
+				if ($("#TF").attr("selected") == "selected"){
+					$("#infobox").html("<b>Ranking Algorithm:</b><br>TF/ICF:<br>(Term Frequency) Rank terms by the number of occurrences in the document titles");
+				}
+			}
+
+			if ($(this).attr("id") == "similarity" || ($(this).attr("for") == "similarity")){
+				if ($("#LSA").attr("selected") == "selected"){
+					$("#infobox").html("<b>Similarity Algorithm:</b><br>Latent Semantic Analysis:<br>Produce set of concepts underlying phrases in titles using singular value decomposition, then use <a href='http://en.wikipedia.org/wiki/Cosine_similarity'>cosine similarity</a> between term rows as pairwise term similarity.");
+				}
+				if ($("#Jaccard").attr("selected") == "selected"){
+					$("#infobox").html("<b>Similarity Algorithm:</b><br>Jaccard:<br>Calculate pairwise term similarity as number of documents two terms appeared together in, divided by number of documents either term appeared in. Treats terms as atomic units: e.g. ``Jaccard'' and ``Jaccard Partial Match'' are not the same term. Read more about Jaccard and Jaccard Partial Match <a href='http://en.wikipedia.org/wiki/Jaccard_index'>here.</a>");
+				}
+				if ($("#Jaccard_PM").attr("selected") == "selected"){
+					$("#infobox").html("<b>Similarity Algorithm:</b><br>Jaccard Partial Match:<br>Calculate pairwise term similarity as number of documents two terms appeared together in, divided by number of documents either term appeared in. Treats two terms as the same if they overlap: e.g. ``Jaccard'' and ``Jaccard Partial Match'' are counted as the same term. Read more about Jaccard and Jaccard Partial Match <a href='http://en.wikipedia.org/wiki/Jaccard_index'>here.</a>");
+				}
+				if ($("#DJS").attr("selected") == "selected"){
+					$("#infobox").html("<b>Similarity Algorithm:</b><br>Distributional (Jensen-Shannon):<br>Compute pairwise term similarity as the <a href='http://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence'>Jensen-Shannon divergence</a> of their multinomial term context distributions across all documents. Very slow.");
+				}
+			}
+			if ($(this).attr("id") == "filtering" || ($(this).attr("for") == "filtering")){
+				if ($("#top_terms").attr("selected") == "selected"){
+					$("#infobox").html("<b>Filtering Algorithm:</b><br>Top Terms Only:<br>Plot the 500 highest-ranked terms, and the similarities between these terms. Do not bring in any lesser-ranked terms, even if they are very similar to top terms.");
+				}
+				if ($("#lesser_terms").attr("selected") == "selected"){
+					$("#infobox").html("<b>Filtering Algorithm:</b><br>Pull Lesser Terms:<br>Plot the 75 highest-ranked terms, and the 9 most-similar terms to each of these top terms. Can pull in terms beyond the top 75, if they are more similar than any of the other top terms.");
+				}
+				if ($("#hybrid").attr("selected") == "selected"){
+					$("#infobox").html("<b>Filtering Algorithm:</b><br>Hybrid:<br>Acts as both Top Terms Only and Pull Lesser Terms.");
+				}
+			}
+		}
+        /*
+		$("input").mouseover(bringInTooltip);
+		$("label").mouseover(bringInTooltip);
+		$("select").mouseover(bringInTooltip);
+        */
         });
     </script>
 {% endblock %}
 
 {% block content %}
+<div id='infobox'></div>
 <form method="post" action='{% url request_map %} '>
     {% csrf_token %}
     <div id='basemap'>

@@ -12,7 +12,7 @@ from re import sub, search
 from collections import Counter
 from sqlalchemy.sql.expression import func
 from status import set_status
-from utils import flatten
+from utils import flatten, hashable
 from chunking import STOP_WORDS
 from nltk.tokenize import word_tokenize
 
@@ -71,7 +71,12 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     terms in documents in heatmap_terms (which should be an iterable
     of term tuples) that are also in the set
     graph_terms"""
-    term_counts = Counter(term for term in heatmap_terms if term in graph_terms)
+    term_counts = Counter()
+    for term in heatmap_terms:
+        print hashable(term)
+        print hashable(term) in graph_terms
+        term_counts[hashable(term)] += 1
+    # term_counts = Counter(term for term in heatmap_terms if hashable(term) in graph_terms)
     return term_counts
 
 def create_query(author=None, conference=None, journal=None):
@@ -170,7 +175,6 @@ def function_help(calling_function):
 
 def graphviz_command(sfdp='sfdp', gvmap='gvmap', gvpr='gvpr', labels_path='map/viz/labels.gvpr', neato='neato', file_format='svg'):
     return "%s -c -f %s | %s -Goverlap=prism -Goutputorder=edgesfirst -Gsize=60,60! | %s -e  -s -4 | %s -Gforcelabels=false -Ecolor=grey  -Gsize=60,60! -n2 -T%s" % (gvpr, labels_path, sfdp if USE_SFDP_FOR_LAYOUT else neato, gvmap, neato, file_format)
-
 
 def strip_dimensions(svg):
     """having width and height attributes as well as a viewbox will cause openlayers to not display the svg propery, so we strip those attributes out"""

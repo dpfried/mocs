@@ -112,7 +112,9 @@ class Author(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        return session.query(Author, func.count(author_document_table.c.document_id).label('doc_count')).filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
+        return session.query(Author,
+                             func.count(author_document_table.c.document_id).label('doc_count'))\
+                .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -178,19 +180,6 @@ def sliced_query(query, slice_size=10000, session_to_write=None):
             yield record
         if session_to_write:
             session_to_write.commit()
-
-if __name__ == "__main__":
-    print '%d documents' % db.Document.query.count()
-    print '%d journals' % db.Journal.query.count()
-    print '%d conferences' % db.Conference.query.count()
-    print 'top 30 authors:'
-    pprint(top_authors(30))
-    print 'top 30 conferences:'
-    pprint(top_conferences(30))
-    print 'top 30 journals:'
-    pprint(top_journals(30))
-
-
 
 if __name__ == '__main__':
     engine.echo = True
