@@ -159,7 +159,7 @@ def _document_matrix(structured_phrases, phrases_to_score, status_callback=None)
 
     def do_callback():
         pct_format = lambda percent: 'building document matrix: %.0f%% done' % (percent * 100)
-        if status_callback and count % increment == 0:
+        if increment > 0 and status_callback and count % increment == 0:
             status_callback(pct_format(float(count) / length))
 
     for doc_index, doc in enumerate(structured_phrases):
@@ -232,7 +232,7 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
     increment = length / 100
 
     def do_callback():
-        if status_callback and count % increment == 0:
+        if increment > 0 and status_callback and count % increment == 0:
             status_callback(status_format(float(count) / length))
 
     # take each document
