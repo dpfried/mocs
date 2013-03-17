@@ -143,15 +143,20 @@ function rescale_heatmap() {
 }
 
 function display_basemap(basemap_url, width, height) {
-    map = new OpenLayers.Map ("map", {
+    var bounds = new OpenLayers.Bounds(0, -1 * height, width, 0);
+    map_options = {
         controls:[
             new OpenLayers.Control.Navigation(),
             new OpenLayers.Control.PanZoomBar(),
             new OpenLayers.Control.LayerSwitcher(),
             new OpenLayers.Control.Attribution()
-        ]
-        });
-    var bounds = new OpenLayers.Bounds(0, -1 * height, width, 0);
+                ],
+        maxExtent: bounds,
+        //minExtent: new OpenLayers.Bounds(0, -1 * height/2, width/2, 0),
+        numZoomLevels: 8,
+        fractionalZoom: true,
+    }
+    map = new OpenLayers.Map ("map", map_options);
     var mocs = new OpenLayers.Layer.ScalableInlineXhtml(
         "MoCS",
         basemap_url,
@@ -224,7 +229,7 @@ function display_heatmap(heatmap_url) {
 
 {% block content %}
     <div id='status'></div>
-    <div id='map' style='height:800px'></div>
+    <div id='map' style='height:1200px'></div>
 
     heatmap opacity
     <div id='opacity-slider' style='margin:1em'></div>
