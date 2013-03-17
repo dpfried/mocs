@@ -8,7 +8,7 @@ from mocs_config import SQL_CONNECTION
 echo = False
 
 ### setting up sqlalchemy stuff ###
-engine = create_engine(SQL_CONNECTION, echo=echo)
+engine = create_engine(SQL_CONNECTION, echo=echo, pool_recycle=True)
 Session = scoped_session(sessionmaker(bind=engine))
 
 
