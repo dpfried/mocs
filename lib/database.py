@@ -109,9 +109,13 @@ class Author(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        return Session.query(Author,
-                             func.count(author_document_table.c.document_id).label('doc_count'))\
-                .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
+        try:
+            return Session.query(Author,
+                                func.count(author_document_table.c.document_id).label('doc_count'))\
+                    .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
+        except:
+            Session.rollback()
+            raise
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -124,17 +128,25 @@ class Journal(Base):
 
     @classmethod
     def filter_document_query(cls, query, name_like):
-        return query.join(Journal).filter(Journal.name.like(name_like))
+        try:
+            return query.join(Journal).filter(Journal.name.like(name_like))
+        except:
+            Session.rollback()
+            raise
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        stmt = Session.query(Document.journal_id, func.count('*').label('doc_count'))\
-                .group_by(Document.journal_id)\
-                .subquery()
-        return Session.query(Journal, stmt.c.doc_count)\
-                .filter(Journal.name.like(name_like))\
-                .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
-                .order_by('doc_count DESC').slice(0, n).all()
+        try:
+            stmt = Session.query(Document.journal_id, func.count('*').label('doc_count'))\
+                    .group_by(Document.journal_id)\
+                    .subquery()
+            return Session.query(Journal, stmt.c.doc_count)\
+                    .filter(Journal.name.like(name_like))\
+                    .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
+                    .order_by('doc_count DESC').slice(0, n).all()
+        except:
+            Session.rollback()
+            raise
 
 
     def __unicode__(self):
@@ -153,13 +165,17 @@ class Conference(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        stmt = Session.query(Document.conference_id, func.count('*').label('doc_count'))\
-                .group_by(Document.conference_id)\
-                .subquery()
-        return Session.query(Conference, stmt.c.doc_count)\
-                .filter(Conference.name.like(name_like))\
-                .outerjoin(stmt, Conference.id == stmt.c.conference_id)\
-                .order_by('doc_count DESC').slice(0, n).all()
+        try:
+            stmt = Session.query(Document.conference_id, func.count('*').label('doc_count'))\
+                    .group_by(Document.conference_id)\
+                    .subquery()
+            return Session.query(Conference, stmt.c.doc_count)\
+                    .filter(Conference.name.like(name_like))\
+                    .outerjoin(stmt, Conference.id == stmt.c.conference_id)\
+                    .order_by('doc_count DESC').slice(0, n).all()
+        except:
+            Session.rollback()
+            raise
 
     def __unicode__(self):
         return u'%s' % self.name
