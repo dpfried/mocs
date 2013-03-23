@@ -43,3 +43,12 @@ def jsonize_phrase_dict(phrase_dict, val_string='frequency', term_to_str_fn=lamb
     Val: a dictionary of strings to values, where tuples have been separated by spaces"""
     return [{'term':term_to_str_fn(term), val_string:val}
             for (term, val) in phrase_dict.items()]
+
+def jsonize_phrase_set(phrase_set, term_to_str_fn=lambda tpl: ' '.join(tpl)):
+    """Input: a set of string tuples
+
+    Val: a list of strings, where tuples have been separated by spaces"""
+    if term_to_str_fn:
+        return [term_to_str_fn(tpl) for tpl in phrase_set]
+    else:
+        return list(phrase_set)

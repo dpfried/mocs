@@ -3,11 +3,35 @@ from celery.task import task
 from pipeline import create_query, filter_query, calculate_heatmap_values,\
     map_representation, strip_dimensions, call_graphviz, extract_terms
 from status import set_status
-from utils import flatten, jsonize_phrase_dict
+from utils import flatten, jsonize_phrase_dict, jsonize_phrase_set
 import write_dot
 import json
 
 def create_task_and_maps(task_parameters, include_heatmap=True):
+    '''
+    task_parameters:
+        'basemap_ending_year': (int, "ending_year"),
+        'basemap_sample_size': (int, "sample_size"),
+        'basemap_starting_year': (int, "starting_year"),
+        'number_of_terms': int,
+        'ranking_algorithm': int,
+        'similarity_algorithm': int,
+        'filtering_algorithm': int,
+        'basemap_author': (str, 'author'),
+        'basemap_conference': (str, 'conference'),
+        'basemap_journal': (str, 'journal'),
+        'basemap_term_type': (int, 'term_type'),
+
+    if include_heatmap then also pass the following:
+        'heatmap_starting_year': (int, "starting_year"),
+        'heatmap_ending_year': (int, "ending_year"),
+        'heatmap_sample_size': (int, "sample_size"),
+        'heatmap_author': (str, 'author'),
+        'heatmap_conference': (str, 'conference'),
+        'heatmap_journal': (str, 'journal'),
+        'heatmap_term_type': (int, 'term_type'),
+)
+    '''
     # set up new objects
     basemap = Basemap(finished=False, **filter_basemap_args(task_parameters))
     basemap.save()
@@ -21,6 +45,15 @@ def create_task_and_maps(task_parameters, include_heatmap=True):
     return task
 
 def create_task_with_existing_basemap(basemap_id, heatmap_task_parameters):
+    """heatmap_task_parameters:
+        'heatmap_starting_year': (int, "starting_year"),
+        'heatmap_ending_year': (int, "ending_year"),
+        'heatmap_sample_size': (int, "sample_size"),
+        'heatmap_author': (str, 'author'),
+        'heatmap_conference': (str, 'conference'),
+        'heatmap_journal': (str, 'journal'),
+        'heatmap_term_type': (int, 'term_type'),
+    """
     basemap = Basemap.objects.get(id=basemap_id)
     heatmap = Heatmap(finished=False, **filter_heatmap_args(heatmap_task_parameters))
     heatmap.save()
@@ -28,12 +61,22 @@ def create_task_with_existing_basemap(basemap_id, heatmap_task_parameters):
     task.save()
     return task
 
-
 @task(ignore_result=True)
 def request_task(task_id):
     task = Task.objects.get(id=task_id)
     map_dict, graph_terms = make_basemap(task.basemap)
-    heatmap_vals = make_heatmap(task.heatmap, graph_terms)
+    if task.heatmap is not None:
+        heatmap_vals = make_heatmap(task.heatmap, graph_terms)
+
+@task(ignore_result=True)
+def request_heatmap(task_id):
+    # similar to request_task, but assume that we've already made the basemap
+    task = Task.objects.get(id=task_id)
+    if task.heatmap is not None:
+        # load the serialized terms in the basemap from the basemap object for
+        # calculating the heatmap intersection
+        graph_terms = map(tuple, json.loads(task.basemap.phrases_in_map))
+        heatmap_vals = make_heatmap(task.heatmap, graph_terms)
 
 def make_heatmap(heatmap, graph_terms):
     set_status('getting document list', model=heatmap)
@@ -72,6 +115,8 @@ def make_basemap(basemap):
     # save to database
     basemap.dot_rep = map_string
     # basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')
+    # get phrases as a list of lists of strings (one list of words per term)
+    basemap.phrases_in_map = json.dumps(jsonize_phrase_set(graph_terms, None)).decode('ascii', 'ignore')
     basemap.save()
     svg_str, width, height = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
     basemap.svg_rep = svg_str
