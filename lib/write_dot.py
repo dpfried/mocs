@@ -11,7 +11,7 @@ def node_string(node, level=None, fontsize=14):
         return '"%s" [fontsize=%s]\n' % (node, fontsize)
 
 def pair_string(name1, name2, length, weight):
-    return '"%s" -- "%s"[len=%s, weight=%s]\n' % (name1, name2, length, weight)
+    return '"%s" -- "%s"[len=%.5f, weight=%d]\n' % (name1, name2, length, weight)
 
 def safe_string(tpl):
     try:

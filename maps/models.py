@@ -94,4 +94,4 @@ class Heatmap(models.Model):
 
 class Task(models.Model):
     basemap = models.ForeignKey(Basemap)
-    heatmap = models.ForeignKey(Heatmap)
+    heatmap = models.ForeignKey(Heatmap, null=True)

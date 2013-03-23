@@ -24,7 +24,7 @@ var heatmap_error_timeout = basemap_error_timeout;
 
 var heatmap_intensity = 0.08;
 var heatmap_default_opacity = 0.6;
-var heatmap_scaling_factor = 40;
+var heatmap_scaling_factor = 25;
 
 var heatmap_metadata;
 var basemap_metadata;
@@ -97,7 +97,7 @@ function get_node(text) {
 
 function highlight_terms(term_list) {
     /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
-    var scaling_factor = term_list.map(function(d) { return d.intensity; })
+    var scaling_factor = term_list.map(function(d) { return Math.log(d.intensity); })
         .reduce(function(p, c) { return Math.max(p,c); });
     var svg = $('svg');
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
@@ -107,7 +107,7 @@ function highlight_terms(term_list) {
     }
     else {
         term_list.map(function (term) {
-                highlight_node(term.term, term.radius, term.intensity / scaling_factor);
+                highlight_node(term.term, term.radius, Math.log(term.intensity) / scaling_factor);
                 });
         rescale_heatmap();
     }
