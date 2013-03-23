@@ -7,15 +7,27 @@ from utils import flatten, jsonize_phrase_dict
 import write_dot
 import json
 
-def create_task_and_maps(task_parameters):
+def create_task_and_maps(task_parameters, include_heatmap=True):
     # set up new objects
     basemap = Basemap(finished=False, **filter_basemap_args(task_parameters))
     basemap.save()
-    heatmap = Heatmap(finished=False, **filter_heatmap_args(task_parameters))
+    if include_heatmap:
+        heatmap = Heatmap(finished=False, **filter_heatmap_args(task_parameters))
+        heatmap.save()
+        task = Task(basemap=basemap, heatmap=heatmap)
+    else:
+        task = Task(basemap=basemap)
+    task.save()
+    return task
+
+def create_task_with_existing_basemap(basemap_id, heatmap_task_parameters):
+    basemap = Basemap.objects.get(id=basemap_id)
+    heatmap = Heatmap(finished=False, **filter_heatmap_args(heatmap_task_parameters))
     heatmap.save()
     task = Task(basemap=basemap, heatmap=heatmap)
     task.save()
     return task
+
 
 @task(ignore_result=True)
 def request_task(task_id):
@@ -59,7 +71,7 @@ def make_basemap(basemap):
     map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
     # save to database
     basemap.dot_rep = map_string
-    basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')
+    # basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')
     basemap.save()
     svg_str, width, height = strip_dimensions(call_graphviz(map_string, file_format='svg', model=basemap))
     basemap.svg_rep = svg_str
