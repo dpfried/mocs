@@ -9,7 +9,7 @@ from numpy import log
 
 debug = False
 
-def similarity_to_distance(similarity, scaling_factor=10, smoothing_val=.1):
+def similarity_to_distance(similarity, scaling_factor=1, smoothing_val=.1):
     # return 10 * (base / (base + sim_matrix))
     return scaling_factor * -1 * log((1-smoothing_val)*similarity + smoothing_val)
 
