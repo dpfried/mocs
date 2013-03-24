@@ -4,16 +4,22 @@ from pipeline import TermExtraction
 from pprint import pprint
 import pickle
 
-def make_basemaps(author = None, conference = None, journal = 'IEEE Trans. Vis. Comput. Graph.',
+def make_basemaps(author = None, conference = None, journal = None,
                   basemap_starting_year = 1950, basemap_ending_year = 2013,
                   basemap_sample_size = 30000, number_of_terms = 1500,
-                  pickle_filename = '/home/dfried/tvcg_basemap_ids.pickle'):
+                  pickle_filename = '/home/dfried/full_basemap_ids.pickle'):
     basemap_ids = {}
 
     for basemap_term_type in range(3):
+        if basemap_term_type == 1:
+            continue
         for ranking_algorithm in range(4):
             for similarity_algorithm in range(3):
+                if similarity_algorithm == 0:
+                    continue
                 for filtering_algorithm in range(2):
+                    if filtering_algorithm == 0:
+                        continue
                     task_parameters = {
                         'basemap_starting_year': basemap_starting_year,
                         'basemap_ending_year': basemap_ending_year,

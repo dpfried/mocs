@@ -99,6 +99,7 @@ function highlight_terms(term_list) {
     /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
     var scaling_factor = term_list.map(function(d) { return Math.log(d.intensity); })
         .reduce(function(p, c) { return Math.max(p,c); });
+    console.debug(scaling_factor);
     var svg = $('svg');
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
     if (svg.length == 0) {
