@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import pickle
 from utils import sub_lists
 import database as db
 import filtering
@@ -148,6 +149,8 @@ def call_similarity(similarity_index, structured_nps, phrases, model=None, statu
     similarity_fn = similarity_fns[similarity_index]
     set_status('calculating similarity with %s' % similarity_fn, model=model)
     sim_matrix, phrases = similarity_fn(structured_nps, phrases, status_callback=status_callback)
+    # with open('/tmp/sim.pickle', 'w') as f:
+    #     pickle.dump(sim_matrix, f)
     return sim_matrix, phrases
 call_similarity.functions = similarity_fns
 call_similarity.default = similarity_fns.index(similarity.jaccard_partial)
@@ -203,6 +206,10 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
         structured_nps = simplification.term_replacement(structured_nps, ranked_phrases)
     set_status('calculating similarity', model=model)
     sim_matrix, phrase_lookups = call_similarity(similarity_algorithm, structured_nps, ranked_phrases, model=model, status_callback=lambda s: set_status(s, model=model))
+    # with open('/tmp/sim_matrix.pickle', 'w') as f:
+    #     pickle.dump(sim_matrix, f)
+    # with open('/tmp/phrase_lookups.pickle', 'w') as f:
+    #     pickle.dump(phrase_lookups, f)
     phrase_pairs = call_filter(filtering_algorithm,  sim_matrix, phrase_lookups, model=model)
     normed = similarity.similarity_dict_to_distance(phrase_pairs)
     # build set of terms in graph

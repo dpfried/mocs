@@ -18,7 +18,7 @@ def top(similarity_matrix, indices, top_limit=500, load_factor=8):
         print "filtered %d phrases" % len(found)
     return phrase_pairs
 
-def pull_lesser(similarity_matrix, indices, top_limit=75, load_factor=9):
+def pull_lesser(similarity_matrix, indices, top_limit=90, load_factor=12):
     """ indices should contain phrases for every row and col in matrix,
     and they should be in order of decreasing ranking
     top_limit is the number that should be counted as top phrases"""
