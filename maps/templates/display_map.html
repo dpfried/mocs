@@ -33,7 +33,8 @@ var delay = 0;
 var delta_delay = 500;
 
 $(document).ready(function(){
-    get_basemap_status();
+        // $('#collapsible').accordion();
+        get_basemap_status();
 });
 
 function get_basemap_status() {
@@ -46,6 +47,8 @@ function get_basemap_status() {
         timeout:basemap_error_timeout,
         success: function(data) {
             basemap_metadata = data;
+            //$('#basemap_metadata').text(JSON.stringify(basemap_metadata, null, 4));
+            $('#basemap_metadata').text(basemap_metadata.ranking_algorithm + ',' + basemap_metadata.similarity_algorithm + ',' + basemap_metadata.filtering_algorithm + ',' + basemap_metadata.number_of_terms + ':' + basemap_metadata.documents_sampled + ' docs from ' + basemap_metadata.conference + basemap_metadata.journal + basemap_metadata.author + (basemap_metadata.starting_year + '-' + basemap_metadata.ending_year));
             $('#status').text(basemap_metadata.status);
             if (basemap_metadata.finished) {
                 $('#status').hide();
@@ -72,6 +75,8 @@ function get_heatmap_status() {
         timeout: heatmap_error_timeout,
         success: function(data) {
             heatmap_metadata = data;
+            //$('#heatmap_metadata').text(JSON.stringify(heatmap_metadata, null, 4));
+            $('#heatmap_metadata').text(heatmap_metadata.documents_sampled + ' docs from ' + heatmap_metadata.conference + heatmap_metadata.journal + heatmap_metadata.author + (heatmap_metadata.starting_year + '-' + heatmap_metadata.ending_year));
             if (heatmap_metadata.finished) {
                 display_heatmap('{% url maps.views.heatmap data.heatmap_id %}');
             }
@@ -186,6 +191,7 @@ function display_basemap(basemap_url, width, height) {
     overview.size.h = 120;
     //map.addControl(overview);
 
+    /*
     $("#intensity-slider").slider({
         min: 0.0,
         max: 0.5,
@@ -205,6 +211,7 @@ function display_basemap(basemap_url, width, height) {
         heatmap.setOpacity(ui.value);
         }
     });
+    */
     get_heatmap_status();
 } 
 
@@ -230,10 +237,35 @@ function display_heatmap(heatmap_url) {
 
 {% block content %}
     <div id='status'></div>
+    <div id='collapsible'>
+        <table style='width:100%'>
+            <tr>
+                <td>
+                    Basemap
+                </td>
+                <td>
+                    Heatmap
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div id='basemap_metadata'></div>
+                </td>
+                <td>
+                    <div id='heatmap_metadata'></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <!--
     <div id='map' style='height:1200px'></div>
+    -->
+    <div id='map' style='height:1000px'></div>
 
+    <!--
     heatmap opacity
     <div id='opacity-slider' style='margin:1em'></div>
     heatmap intensity
     <div id='intensity-slider' style='margin:1em'></div>
+    -->
 {% endblock %}
