@@ -90,6 +90,7 @@ def create_query(author=None, conference=None, journal=None):
     return query
 
 ranking_fns = [ranking.tfidf, ranking.cnc_bigrams, ranking.cnc_unigrams, ranking.tf]
+ranking_fn_names = ['TF/ICF', 'C-Value', 'C-Value with Unigrams', 'Term Frequency']
 def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
     """ranking_index: 0 = TFIDF; 1 = C-value; 2 = C-value + Unigrams; 3 = TF"""
     ranking_fn = ranking_fns[ranking_index]
@@ -141,6 +142,7 @@ call_rank.functions = ranking_fns
 call_rank.default = ranking_fns.index(ranking.cnc_bigrams)
 
 similarity_fns = [similarity.lsa, similarity.jaccard_full, similarity.jaccard_partial, similarity.distributional_js]
+similarity_fn_names = ['LSA', 'Jaccard Coefficient', 'Partial Match Jaccard Coefficient', 'Distributional JS']
 def call_similarity(similarity_index, structured_nps, phrases, model=None, status_callback=None):
     """
     similarity_index: 0 = LSA (w/ Cosine similarity); 1 = Jaccard; 2 = Jaccard (partial match); 3 = Distributional similarity (w/ Jensen-Shannon divergence)
@@ -156,6 +158,7 @@ call_similarity.functions = similarity_fns
 call_similarity.default = similarity_fns.index(similarity.jaccard_partial)
 
 filtering_fns = [filtering.top, filtering.pull_lesser, filtering.hybrid]
+filtering_fn_names = ['Top Terms Only', 'Pull Lesser Terms', 'Hybrid']
 def call_filter(filter_index, sim_matrix, phrases, top_limit_override=None, model=None):
     """
     filter_index: 0 = Top; 1 = Pull in Lesser Terms; 2 = Take Top and Fill w/ Lesser
