@@ -64,6 +64,7 @@ def make_single_heatmap(basemap_id, author=None, conference=None, journal=None,
 
 def make_heatmaps_date_range(basemap_ids,start,end,increment=5, author=None,
                             conference=None, journal=None, heatmap_sample_size=4000,
+                             cumulative=False,
                             pickle_filename='/home/dfried/date_range.pickle'):
     basemap_to_tasks = {}
     year_range = range(start, end, increment)
@@ -71,6 +72,8 @@ def make_heatmaps_date_range(basemap_ids,start,end,increment=5, author=None,
         print 'processing basemap %d' % basemap_id
         basemap_to_tasks[basemap_id] = []
         for start_year, end_year in zip(year_range, year_range[1:]+[end]):
+            if cumulative:
+                start_year = start
             if end_year != end:
                 end_year -= 1
             print 'making heatmap for %d - %d' % (start_year, end_year)
