@@ -94,9 +94,10 @@ ranking_fn_names = ['TF/ICF', 'C-Value', 'C-Value with Unigrams', 'Term Frequenc
 def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
     """ranking_index: 0 = TFIDF; 1 = C-value; 2 = C-value + Unigrams; 3 = TF"""
     ranking_fn = ranking_fns[ranking_index]
-    set_status('ranking with %s' % ranking_fn, model=model)
+    ranking_fn_name = ranking_fn_names[ranking_index]
+    set_status('ranking with %s' % ranking_fn_name, model=model)
     if debug:
-        print 'ranking with %s' % ranking_fn
+        print 'ranking with %s' % ranking_fn_name
     scored_phrases, phrase_frequencies = ranking_fn(flattened)
     set_status('ordering', model=model)
     if debug:
