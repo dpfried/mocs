@@ -116,13 +116,13 @@ def make_basemap(basemap):
         if not extracted_terms:
             raise Exception('No documents found matching query!')
         map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms,
-                                                                    ranking_algorithm=basemap.ranking_algorithm,
-                                                                    similarity_algorithm=basemap.similarity_algorithm,
-                                                                    filtering_algorithm=basemap.filtering_algorithm,
-                                                                    number_of_terms=basemap.number_of_terms,
-                                                                    model=basemap)
+                                                                       ranking_algorithm=basemap.ranking_algorithm,
+                                                                       similarity_algorithm=basemap.similarity_algorithm,
+                                                                       filtering_algorithm=basemap.filtering_algorithm,
+                                                                       number_of_terms=basemap.number_of_terms,
+                                                                       model=basemap)
         # map_string will be a graphviz-processable string
-        map_string = write_dot.output_pairs_dict(map_dict, True).decode('ascii', 'ignore')
+        map_string = write_dot.output_pairs_dict(map_dict, True, phrase_frequencies=phrase_frequencies, true_scaling=False).decode('ascii', 'ignore')
         # save to database
         basemap.dot_rep = map_string
         # basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')

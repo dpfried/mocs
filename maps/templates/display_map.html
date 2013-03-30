@@ -89,10 +89,12 @@ function get_basemap_status() {
     });
 }
 
+{% url maps.views.heatmap_metadata data.heatmap_id as heatmap_metadata_url %}
+{% url maps.views.heatmap data.heatmap_id as heatmap_url %}
 function get_heatmap_status() {
     $.ajax({
         type: "GET",
-        url: '{% url maps.views.heatmap_metadata data.heatmap_id %}',
+        url: '{{ heatmap_metadata_url }}',
         async: true,
         cache: false,
         timeout: heatmap_error_timeout,
@@ -101,7 +103,7 @@ function get_heatmap_status() {
             //$('#heatmap_metadata').text(JSON.stringify(heatmap_metadata, null, 4));
             update_heatmap_status(heatmap_metadata);
             if (heatmap_metadata.finished) {
-                display_heatmap('{% url maps.views.heatmap data.heatmap_id %}');
+                display_heatmap('{{ heatmap_url}}');
             }
             else {
                 setTimeout(get_heatmap_status, heatmap_poll_timeout);
@@ -125,8 +127,14 @@ function get_node(text) {
 
 function highlight_terms(term_list) {
     /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
-    var scaling_factor = term_list.map(function(d) { return Math.log(d.intensity); })
-        .reduce(function(p, c) { return Math.max(p,c); });
+    var scaling_factor;
+    if (term_list.length > 0) {
+        scaling_factor = term_list.map(function(d) { return Math.log(d.intensity + 1); })
+            .reduce(function(p, c) { return Math.max(p,c); });
+    }
+    else {
+        scaling_factor = 1;
+    }
     console.debug(scaling_factor);
     var svg = $('svg');
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
@@ -136,7 +144,7 @@ function highlight_terms(term_list) {
     }
     else {
         term_list.map(function (term) {
-                highlight_node(term.term, term.radius, Math.log(term.intensity) / scaling_factor);
+                highlight_node(term.term, term.radius, Math.log(term.intensity + 1) / scaling_factor);
                 });
         rescale_heatmap();
     }
@@ -235,7 +243,12 @@ function display_basemap(basemap_url, width, height) {
         }
     });
     */
-    get_heatmap_status();
+    if ({{ data.heatmap_id }} != -1) {
+        get_heatmap_status();
+    } else {
+        $('#heatmap_status').text('No heatmap query selected');
+    }
+
 } 
 
 function display_heatmap(heatmap_url) {

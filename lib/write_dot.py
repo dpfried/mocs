@@ -35,7 +35,14 @@ def output_pairs(labels, dist_matrix, dist_filter=lambda x: x != 1):
     graph_rep += footer
     return graph_rep
 
-def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None):
+def create_font_size_function(phrase_frequencies, min_size=12, max_size=30):
+    min_freq = min(phrase_frequencies.values())
+    max_freq = max(phrase_frequencies.values())
+    def font_size_from_frequency(freq):
+        return int((freq - min_freq) / float(max_freq - min_freq) * (max_size - min_size) + min_size)
+    return font_size_from_frequency
+
+def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None, true_scaling=False, phrase_frequencies=None):
     graph_rep = header
 
     graph_terms = set()
@@ -43,8 +50,13 @@ def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None)
         graph_terms.add(term)
         graph_terms.update(term for term, val in lst)
 
+    if true_scaling and phrase_frequencies is not None:
+        font_size_from_frequency = create_font_size_function(phrase_frequencies)
+
     for term in graph_terms:
-        if enlarge_primary and term in pair_similarity:
+        if true_scaling:
+            fontsize = font_size_from_frequency(phrase_frequencies[term])
+        elif enlarge_primary and term in pair_similarity:
             fontsize = 18
         else:
             fontsize = 14

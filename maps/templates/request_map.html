@@ -140,8 +140,19 @@
 		$("input").mouseover(bringInTooltip);
 		$("label").mouseover(bringInTooltip);
 		$("select").mouseover(bringInTooltip);
+
         */
+
+		var enableHeatmap = function(event){
+			if (!$(this).is(":checked")){
+				$("#heatmap_parameters").attr("style", "display: none");
+			}else{
+				$("#heatmap_parameters").attr("style", "");
+			}
+		}
         });
+
+		$("#draw_heatmap").change(enableHeatmap);
     </script>
 {% endblock %}
 
@@ -193,6 +204,7 @@
             <input type='text' id='basemap_conference' name='basemap_conference' class="search"><br>
             <label for='basemap_journal'>Journal:</label><br>
             <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
+            <input type="checkbox" id='draw_heatmap' name="draw_heatmap" value="Heatmap" checked="checked">Include a Heatmap 
         </div>
         <h3>Heatmap</h3>
         <div id='heatmap_inner'>

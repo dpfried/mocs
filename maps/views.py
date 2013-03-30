@@ -7,7 +7,8 @@ from maps.models import Task, Basemap, Heatmap
 
 def request_map(request):
     if request.method == 'POST':
-        task = create_task_and_maps(dict(request.POST.items()))
+        include_heatmap = 'draw_heatmap' in request.POST
+        task = create_task_and_maps(dict(request.POST.items()), include_heatmap=include_heatmap)
         request_task.delay(task.id)
         return redirect('display_map', task.id)
 
@@ -17,7 +18,7 @@ def display_map(request, task_id):
         data = {
             'task_id': task_id,
             'basemap_id': task.basemap.id,
-            'heatmap_id': task.heatmap.id
+            'heatmap_id': task.heatmap.id if task.heatmap is not None else -1
         }
         return render_to_response('display_map.html', {'data': data})
 
