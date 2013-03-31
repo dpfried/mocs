@@ -15,10 +15,10 @@ CELERY_IMPORTS = ('lib.web_interface',)
 CELERY_PID_FILENAME = abspath('celeryd.pid')
 CELERY_LOG_FILENAME = abspath('celeryd.log')
 
-DEBUG = True
+DEBUG = False
 
 ADMINS = (
-    ('admin', 'admin@example.com'),
+    ('dfried', 'dfried@email.arizona.edu'),
 )
 
 TEMPLATE_DEBUG = DEBUG
