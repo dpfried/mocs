@@ -1,5 +1,6 @@
 from maps.models import Task, Basemap, Heatmap
 from celery.task import task
+from database import ManagedSession
 from pipeline import create_query, filter_query, calculate_heatmap_values,\
     map_representation, strip_dimensions, call_graphviz, extract_terms
 from status import set_status
@@ -81,13 +82,14 @@ def request_heatmap(task_id):
 def make_heatmap(heatmap, graph_terms):
     try:
         set_status('getting document list', model=heatmap)
-        heatmap_query= create_query(author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
-        filtered_query = filter_query(heatmap_query, dirty=True,
-                                    starting_year=heatmap.starting_year,
-                                    ending_year=heatmap.ending_year,
-                                    sample_size=heatmap.sample_size,
-                                    model=heatmap)
-        extracted_terms = extract_terms(filtered_query, heatmap.term_type)
+        with ManagedSession() as session:
+            heatmap_query= create_query(session, author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
+            filtered_query = filter_query(heatmap_query, dirty=True,
+                                        starting_year=heatmap.starting_year,
+                                        ending_year=heatmap.ending_year,
+                                        sample_size=heatmap.sample_size,
+                                        model=heatmap)
+            extracted_terms = extract_terms(filtered_query, heatmap.term_type)
         heatmap_terms = flatten(extracted_terms)
         heatmap_vals = calculate_heatmap_values(heatmap_terms, graph_terms)
         heatmap.terms = json.dumps(jsonize_phrase_dict(heatmap_vals, 'intensity'))
@@ -101,18 +103,15 @@ def make_heatmap(heatmap, graph_terms):
 
 def make_basemap(basemap):
     try:
-        print 'making basemap'
         set_status('getting document list', model=basemap)
-        basemap_query = create_query(author=basemap.author, conference=basemap.conference, journal=basemap.journal)
-        print 'author:', basemap.author
-        print 'conference:', basemap.conference
-        print 'journal:', basemap.journal
-        documents = filter_query(basemap_query, dirty=False,
-                                starting_year=basemap.starting_year,
-                                ending_year=basemap.ending_year,
-                                sample_size=basemap.sample_size,
-                                model=basemap)
-        extracted_terms = extract_terms(documents, basemap.term_type)
+        with ManagedSession() as session:
+            basemap_query = create_query(session, author=basemap.author, conference=basemap.conference, journal=basemap.journal)
+            documents = filter_query(basemap_query, dirty=False,
+                                    starting_year=basemap.starting_year,
+                                    ending_year=basemap.ending_year,
+                                    sample_size=basemap.sample_size,
+                                    model=basemap)
+            extracted_terms = extract_terms(documents, basemap.term_type)
         if not extracted_terms:
             raise Exception('No documents found matching query!')
         map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms,

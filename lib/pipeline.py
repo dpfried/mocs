@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import pickle
 from utils import sub_lists
 import database as db
 import filtering
@@ -79,8 +78,8 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     # term_counts = Counter(term for term in heatmap_terms if hashable(term) in graph_terms)
     return term_counts
 
-def create_query(author=None, conference=None, journal=None):
-    query = db.Document.query
+def create_query(session, author=None, conference=None, journal=None):
+    query = session.query(db.Document)
     if author:
         query = db.Author.filter_document_query(query, author)
     if journal:

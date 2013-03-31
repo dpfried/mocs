@@ -11,6 +11,15 @@ echo = False
 engine = create_engine(SQL_CONNECTION, echo=echo, pool_recycle=3600)
 Session = scoped_session(sessionmaker(bind=engine))
 
+class ManagedSession:
+    def __enter__(self):
+        self._session = Session()
+        return self._session
+
+    def __exit__(self, type, value, traceback):
+        self._session.close()
+
+
 def create_all():
     Base.metadata.create_all(engine)
 
@@ -28,17 +37,6 @@ class Base(object):
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self)
-
-    # easy access to `Query` object
-    @ClassProperty
-    @classmethod
-    def query(cls):
-        return Session.query(cls)
-
-    # like in elixir
-    @classmethod
-    def get_by(cls, **kwargs):
-        return cls.query.filter_by(**kwargs).first()
 
     # like in django
     @classmethod
@@ -108,13 +106,14 @@ class Author(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        try:
-            return Session.query(Author,
-                                func.count(author_document_table.c.document_id).label('doc_count'))\
-                    .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n)
-        except:
-            Session.rollback()
-            raise
+        with ManagedSession() as session:
+            try:
+                return session.query(Author,
+                                    func.count(author_document_table.c.document_id).label('doc_count'))\
+                        .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n).all()
+            except:
+                session.rollback()
+                raise
 
     def __unicode__(self):
         return u'%s' % self.name
@@ -127,25 +126,22 @@ class Journal(Base):
 
     @classmethod
     def filter_document_query(cls, query, name_like):
-        try:
-            return query.join(Journal).filter(Journal.name.like(name_like))
-        except:
-            Session.rollback()
-            raise
+        return query.join(Journal).filter(Journal.name.like(name_like))
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        try:
-            stmt = Session.query(Document.journal_id, func.count('*').label('doc_count'))\
-                    .group_by(Document.journal_id)\
-                    .subquery()
-            return Session.query(Journal, stmt.c.doc_count)\
-                    .filter(Journal.name.like(name_like))\
-                    .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
-                    .order_by('doc_count DESC').slice(0, n).all()
-        except:
-            Session.rollback()
-            raise
+        with ManagedSession() as session:
+            try:
+                stmt = session.query(Document.journal_id, func.count('*').label('doc_count'))\
+                        .group_by(Document.journal_id)\
+                        .subquery()
+                return session.query(Journal, stmt.c.doc_count)\
+                        .filter(Journal.name.like(name_like))\
+                        .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
+                        .order_by('doc_count DESC').slice(0, n).all()
+            except:
+                session.rollback()
+                raise
 
 
     def __unicode__(self):
@@ -164,17 +160,18 @@ class Conference(Base):
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
-        try:
-            stmt = Session.query(Document.conference_id, func.count('*').label('doc_count'))\
-                    .group_by(Document.conference_id)\
-                    .subquery()
-            return Session.query(Conference, stmt.c.doc_count)\
-                    .filter(Conference.name.like(name_like))\
-                    .outerjoin(stmt, Conference.id == stmt.c.conference_id)\
-                    .order_by('doc_count DESC').slice(0, n).all()
-        except:
-            Session.rollback()
-            raise
+        with ManagedSession() as session:
+            try:
+                stmt = session.query(Document.conference_id, func.count('*').label('doc_count'))\
+                        .group_by(Document.conference_id)\
+                        .subquery()
+                return session.query(Conference, stmt.c.doc_count)\
+                        .filter(Conference.name.like(name_like))\
+                        .outerjoin(stmt, Conference.id == stmt.c.conference_id)\
+                        .order_by('doc_count DESC').slice(0, n).all()
+            except:
+                session.rollback()
+                raise
 
     def __unicode__(self):
         return u'%s' % self.name
