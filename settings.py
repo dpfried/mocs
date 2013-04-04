@@ -121,6 +121,7 @@ INSTALLED_APPS = (
     'celerytest',
     'maps',
     'dblp',
+    'google_analytics',
 )
 
 # A sample logging configuration. The only tangible logging
