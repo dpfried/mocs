@@ -1,4 +1,4 @@
-from lib.web_interface import request_task, create_task_and_maps
+from lib.web_interface import request_task, request_heatmap, create_task_and_maps, create_task_with_existing_basemap
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse
@@ -8,8 +8,14 @@ from maps.models import Task, Basemap, Heatmap
 def request_map(request):
     if request.method == 'POST':
         include_heatmap = 'draw_heatmap' in request.POST
-        task = create_task_and_maps(dict(request.POST.items()), include_heatmap=include_heatmap)
-        request_task.delay(task.id)
+        use_existing_basemap = 'use_existing_basemap' in request.POST
+        if use_existing_basemap:
+            basemap_id = Task.objects.get(id=request.POST['existing_task_id']).basemap.id
+            task = create_task_with_existing_basemap(basemap_id, dict(request.POST.items()))
+            request_heatmap.delay(task.id)
+        else:
+            task = create_task_and_maps(dict(request.POST.items()), include_heatmap=include_heatmap)
+            request_task.delay(task.id)
         return redirect('display_map', task.id)
 
 def display_map(request, task_id):

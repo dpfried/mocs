@@ -34,6 +34,7 @@ class Basemap(models.Model):
 
     def metadata(self):
         return {
+            'id': self.id,
             'status': self.status,
             'height': self.height,
             'width': self.width,
@@ -76,6 +77,7 @@ class Heatmap(models.Model):
 
     def metadata(self):
         return {
+            'id': self.id,
             'status': self.status,
             'finished': self.finished,
             'starting_year': self.starting_year,
