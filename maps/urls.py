@@ -10,4 +10,6 @@ urlpatterns = patterns('maps.views',
     #url(r'^map/$', 'display_map', name='display_map'),
     url(r'^request_map/$', 'request_map', name='request_map'),
     url(r'^query/$', 'query'),
+    url(r'^task/(\d*)/heatmap/$', 'heatmap_for_task_id', name='heatmap_for_task_id'),
+    url(r'^task/(\d*)/basemap/$', 'basemap_for_task_id', name='basemap_for_task_id'),
 )

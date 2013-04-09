@@ -61,6 +61,12 @@ def heatmap(request, heatmap_id):
         else:
             return HttpResponse(u'pending')
 
+def heatmap_for_task_id(request, task_id):
+    return heatmap(request, Task.objects.get(id=task_id).heatmap.id)
+
+def basemap_for_task_id(request, task_id):
+    return basemap(request, Task.objects.get(id=task_id).basemap.id)
+
 def query(request):
     if request.method == 'GET':
         return render_to_response('request_map.html', context_instance=RequestContext(request))
