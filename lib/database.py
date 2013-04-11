@@ -3,6 +3,7 @@ from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import _declarative_constructor
 from mocs_config import SQL_CONNECTION
+from re import sub, compile
 
 ### configuration ###
 echo = False
@@ -52,6 +53,23 @@ class Base(object):
         # add self to session
         # session.add(self)
 
+class DocumentFilterable(object):
+    @classmethod
+    def join_on_documents(cls, query):
+        return query.join(cls)
+
+    @classmethod
+    def filter_document_query(cls, query, name):
+        joined = cls.join_on_documents(query)
+        with ManagedSession() as session:
+            if session.query(cls).filter(cls.name == name).count() > 0:
+                # print 'found exact match for %s' % (name)
+                return joined.filter(cls.name == name)
+            else:
+                # print 'generalizing to %s' % (generalize(name))
+                return joined.filter(cls.name.like(generalize(name)))
+
+
 Base = declarative_base(cls=Base, constructor=Base._constructor)
 
 ### models start here ###
@@ -92,24 +110,21 @@ class Document(Base):
                     t_list.append(s)
         return t_list
 
-
-class Author(Base):
+class Author(Base,DocumentFilterable):
     """Authors can have multiple papers, backreferenced through Author.documents (see Document class)"""
     __tablename__ = 'author'
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
 
     @classmethod
-    def filter_document_query(cls, query, name_like):
-        return query.join(Author, Document.authors)\
-                .filter(Author.name.like(name_like))
+    def join_on_documents(cls, query):
+        return query.join(Author, Document.authors)
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
         with ManagedSession() as session:
             try:
-                return session.query(Author,
-                                    func.count(author_document_table.c.document_id).label('doc_count'))\
+                return session.query(Author, func.count(author_document_table.c.document_id).label('doc_count'))\
                         .filter(Author.name.like(name_like)).join(author_document_table).group_by(Author).order_by('doc_count DESC').slice(0, n).all()
             except:
                 session.rollback()
@@ -118,15 +133,11 @@ class Author(Base):
     def __unicode__(self):
         return u'%s' % self.name
 
-class Journal(Base):
+class Journal(Base, DocumentFilterable):
     """Journals can have multiple papers, backreferenced through Journal.documents (see Document class)"""
     __tablename__ = 'journal'
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
-
-    @classmethod
-    def filter_document_query(cls, query, name_like):
-        return query.join(Journal).filter(Journal.name.like(name_like))
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
@@ -148,15 +159,11 @@ class Journal(Base):
         return u'%s' % self.name
 
 
-class Conference(Base):
+class Conference(Base, DocumentFilterable):
     """Conferences can have multiple papers, backreferenced through Conference.documents (see Document class)"""
     __tablename__ = 'conference'
     id = Column(Integer, primary_key=True)
     name = Column(UnicodeText)
-
-    @classmethod
-    def filter_document_query(cls, query, name_like):
-        return query.join(Conference).filter(Conference.name.like(name_like))
 
     @classmethod
     def name_like_top(cls, name_like, n=10):
@@ -193,3 +200,12 @@ def sliced_query(query, slice_size=10000, session_to_write=None):
 if __name__ == '__main__':
     engine.echo = True
     create_all()
+
+generalize_pattern = compile(r'[\s\.]+')
+def generalize(query_string):
+    generalized = sub(generalize_pattern, '%', query_string)
+    if not generalized.startswith('%'):
+        generalized = '%' + generalized
+    if not generalized.endswith('%'):
+        generalized = generalized + '%'
+    return generalized

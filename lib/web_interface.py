@@ -137,6 +137,8 @@ def make_basemap(basemap):
         set_status('basemap complete', model=basemap)
         print 'basemap complete'
         return map_dict, graph_terms
+    except ZeroDivisionError as e:
+        set_status('Error: too few documents to produce a map. Try a broader search', model=basemap)
     except Exception as e:
         set_status('Error: %s' % e, model=basemap)
         raise e
@@ -168,9 +170,9 @@ filter_basemap_args = _make_arg_filter(
         'ranking_algorithm': int,
         'similarity_algorithm': int,
         'filtering_algorithm': int,
-        'basemap_author': (str, 'author'),
-        'basemap_conference': (str, 'conference'),
-        'basemap_journal': (str, 'journal'),
+        'basemap_author': (unicode, 'author'),
+        'basemap_conference': (unicode, 'conference'),
+        'basemap_journal': (unicode, 'journal'),
         'basemap_term_type': (int, 'term_type'),
     }
 )
@@ -182,9 +184,9 @@ filter_heatmap_args = _make_arg_filter(
         'heatmap_starting_year': (int, "starting_year"),
         'heatmap_ending_year': (int, "ending_year"),
         'heatmap_sample_size': (int, "sample_size"),
-        'heatmap_author': (str, 'author'),
-        'heatmap_conference': (str, 'conference'),
-        'heatmap_journal': (str, 'journal'),
+        'heatmap_author': (unicode, 'author'),
+        'heatmap_conference': (unicode, 'conference'),
+        'heatmap_journal': (unicode, 'journal'),
         'heatmap_term_type': (int, 'term_type'),
     }
 )

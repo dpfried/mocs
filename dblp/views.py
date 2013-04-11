@@ -1,6 +1,6 @@
 # Create your views here.
-from lib.database import Author, Conference, Journal
-from utils import json_response, generalize
+from lib.database import Author, Conference, Journal, generalize
+from utils import json_response
 
 def to_val_list(named_tpls, name_lookup_fn, doc_lookup_fn = lambda t: t.doc_count):
     return [{'label': '%s : %d' % (name_lookup_fn(named_tpl), doc_lookup_fn(named_tpl)),
