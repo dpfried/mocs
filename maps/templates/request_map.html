@@ -105,15 +105,14 @@
             <input id='existing_task_id' disabled name='existing_task_id' autocomplete='off'>
             <div id='new_map_elements'>
                 <label for='basemap_starting_year'>Starting Year:</label>
-                <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1950' max='2013' value='1950' autocomplete='off'>
+                <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1950' max='2013' value='1950'>
                 <label for='basemap_ending_year'>Ending Year:</label>
-                <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1950' max='2013' value='2013' autocomplete='off'>
                 <div id="basemap_year_range"></div>
 
                 <label for='basemap_sample_size'>Number of Documents:</label><br>
-                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000' autocomplete='off'><br>
+                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'><br>
                 <label for='number_of_terms'>Number of Terms:</label><br>
-                <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1000' autocomplete='off'><br>
+                <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1000'><br>
                 <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
                 <select name="ranking_algorithm" id="ranking_algorithm">
                     <option value="0">TF/ICF</option>
@@ -152,12 +151,12 @@
         <h3>Heatmap</h3>
         <div id='heatmap_inner'>
             <label for='heatmap_starting_year'>Starting Year:</label>
-            <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1950' max='2013' value='1950' autocomplete='off'>
+            <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1950' max='2013' value='1950'>
             <label for='heatmap_ending_year'>Ending Year:</label>
-            <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1950' max='2013' value='2013' autocomplete='off'>
+            <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1950' max='2013' value='2013'>
             <div id="heatmap_year_range"></div>
             <label for='heatmap_sample_size'>Number of Documents:</label><br>
-            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000' autocomplete='off'><br>
+            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'><br>
             <label for='heatmap_term_type'>Term Type:</label><br>
             <select name="heatmap_term_type" id="heatmap_term_type">
                 <option value="0">Phrases</option>
