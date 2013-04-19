@@ -27,9 +27,9 @@
         $(document).ready(function() {
                 // set defaults for dropdown boxes
                 $('.spinner').spinner();
-                $('#ranking_algorithm').val('1');
-                $('#similarity_algorithm').val('2');
-                $('#filtering_algorithm').val('1');
+                <!-- $('#ranking_algorithm').val('1'); -->
+                <!-- $('#similarity_algorithm').val('2'); -->
+                <!-- $('#filtering_algorithm').val('1'); -->
                 $('#basemap_author').autocomplete({
                     source: '{% url top_authors %}',
                     minLength: 3,
@@ -102,7 +102,7 @@
         <div id='basemap_inner'>
             <input type="checkbox" id='use_existing_basemap' name="use_existing_basemap">Use Existing Basemap<br>
             <label for='existing_task_id'>ID of Task:</label><br>
-            <input id='existing_task_id' disabled name='existing_task_id' autocomplete='off'>
+            <input id='existing_task_id' disabled name='existing_task_id'>
             <div id='new_map_elements'>
                 <label for='basemap_starting_year'>Starting Year:</label>
                 <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1950' max='2013' value='1950'>
