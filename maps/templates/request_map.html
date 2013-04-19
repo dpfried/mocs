@@ -26,10 +26,10 @@
     <script type="text/javascript">
         $(document).ready(function() {
                 // set defaults for dropdown boxes
-                $('.spinner').spinner();
-                $('#ranking_algorithm').val('1');
-                $('#similarity_algorithm').val('2');
-                $('#filtering_algorithm').val('1');
+                <!-- $('.spinner').spinner(); -->
+                <!-- $('#ranking_algorithm').val('1'); -->
+                <!-- $('#similarity_algorithm').val('2'); -->
+                <!-- $('#filtering_algorithm').val('1'); -->
                 $('#basemap_author').autocomplete({
                     source: '{% url top_authors %}',
                     minLength: 3,
@@ -117,7 +117,7 @@
                 <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
                 <select name="ranking_algorithm" id="ranking_algorithm">
                     <option value="0">TF/ICF</option>
-                    <option value="1">C-Value</option>
+                    <option selected="selected" value="1">C-Value</option>
                     <option value="2">C-Value + Unigrams</option>
                     <option value="3">TF</option>
                 </select><br>
@@ -125,19 +125,19 @@
                 <select name="similarity_algorithm" id="similarity_algorithm">
                     <option value="0">Latent Semantic Analysis</option>
                     <option value="1">Jaccard</option>
-                    <option value="2">Jaccard Partial Match</option>
+                    <option selected="selected" value="2">Jaccard Partial Match</option>
                     <option value="3">Distributional (Jensen-Shannon)</option>
                 </select><br>
                 <label for='filtering_algorithm'>Filtering Algorithm:</label><br>
                 <select name="filtering_algorithm" id="filtering_algorithm">
                     <option value="0">Top Terms Only</option>
-                    <option value="1">Pull Lesser Terms</option>
+                    <option selected="selected" value="1">Pull Lesser Terms</option>
                     <option value="2">Hybrid</option>
                 </select><br>
                 <label for='basemap_term_type'>Term Type:</label><br>
                 <select name="basemap_term_type" id="basemap_term_type">
                     <option value="0">Phrases</option>
-                    <option value="1">All Words</option>
+                    <!-- <option value="1">All Words</option> -->
                     <option value="2">Words From Phrases</option>
                 </select><br>
                 <label for='basemap_author' >Author:</label><br>
@@ -161,7 +161,7 @@
             <label for='heatmap_term_type'>Term Type:</label><br>
             <select name="heatmap_term_type" id="heatmap_term_type">
                 <option value="0">Phrases</option>
-                <option value="1">All Words</option>
+                <!-- <option value="1">All Words</option> -->
                 <option value="2">Words From Phrases</option>
             </select><br>
             <label for='heatmap_author'>Author:</label><br>
