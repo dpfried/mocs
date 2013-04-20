@@ -33,9 +33,17 @@ var basemap_metadata;
 var delay = 0;
 var delta_delay = 500;
 
+/* prevent console calls from crashing everything */
+if(typeof console === "undefined") {
+    console = {
+        log: function() { },
+        debug: function() { },
+    };
+}
+
 $(document).ready(function(){
         // $('#collapsible').accordion();
-        get_basemap_status();
+       get_basemap_status();
 });
 
 function basemap_algorithm_string(basemap_metadata) {
@@ -118,6 +126,7 @@ function get_heatmap_status() {
 OpenLayers.ImgPath = "http://js.mapbox.com/theme/dark/";
 var map; //OpenLayers.Map
 var heatmap;
+var heatmapTerms = {};
 
 function get_node(text) {
     return $(".node").filter(function() {
@@ -125,9 +134,18 @@ function get_node(text) {
             })
 }
 
-function highlight_terms(term_list) {
-    /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
-    var scaling_factor;
+function draw_scaled_heatmap() {
+    clear_heatmap();
+    var term_list = [];
+    for (var term in heatmapTerms) {
+        term_list.push(
+                { 
+                'term': term,
+                'radius': heatmapTerms[term].radius,
+                'intensity': heatmapTerms[term].intensity
+                });
+    }
+
     if (term_list.length > 0) {
         scaling_factor = term_list.map(function(d) { return Math.log(d.intensity + 1); })
             .reduce(function(p, c) { return Math.max(p,c); });
@@ -140,7 +158,7 @@ function highlight_terms(term_list) {
     // avoid race condition: check if svg has been initialized yet before trying to draw terms
     if (svg.length == 0) {
         delay += delta_delay;
-        setTimeout(highlight_terms, delay, term_list)
+        setTimeout(draw_scaled_heatmap, delay);
     }
     else {
         term_list.map(function (term) {
@@ -148,6 +166,34 @@ function highlight_terms(term_list) {
                 });
         rescale_heatmap();
     }
+}
+
+function display_multiple_heatmaps(url_nums) {
+    base_url = '/mocs/maps/heatmap/'
+    for (var i in url_nums) {
+        num = url_nums[i];
+        display_heatmap(base_url + num);
+    }
+}
+
+function add_highlight_terms(term_list) {
+    /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
+    var scaling_factor;
+    term_list.map(function(d) { 
+        if (d.term in heatmapTerms) {
+            heatmapTerms[d.term].intensity += d.intensity;
+        }
+        else {
+            heatmapTerms[d.term] = {'intensity' : d.intensity};
+        }
+        heatmapTerms[d.term]['radius'] = d.radius;
+    });
+    draw_scaled_heatmap();
+}
+
+function clear_heatmap() {
+    heatmap.points = [];
+    heatmap.redraw();
 }
 
 var ctm;
@@ -260,7 +306,8 @@ function display_heatmap(heatmap_url) {
         cache: false,
         timeout:heatmap_error_timeout,
         success: function(heatmap_data) {
-            highlight_terms(heatmap_data);
+            console.log('got data for ' + heatmap_url);
+            add_highlight_terms(heatmap_data);
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             // try again in 10 seconds if there was a request error
