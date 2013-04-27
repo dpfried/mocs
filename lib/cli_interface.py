@@ -2,19 +2,20 @@
 from pipeline import create_query, filter_query,\
     map_representation, strip_dimensions, call_graphviz, call_rank,\
     call_similarity, call_filter, function_help, TermExtraction, extract_terms
+from database import ManagedSession
 import write_dot
 
 debug = False
 def make_map(query, only_terms=False, file_format='svg',
              include_svg_dimensions=False, starting_year=2000,
              ending_year=2013, sample_size=None, evaluation_output_path=None,
-             term_type=TermExtraction.Phrases, **kwargs):
+             term_type=TermExtraction.Phrases, data_dump_path=None, **kwargs):
     documents = filter_query(query,
                              starting_year=starting_year,
                              ending_year=ending_year,
                              sample_size=sample_size)
     extracted_terms = extract_terms(documents, term_type)
-    map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms, **kwargs)
+    map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms, data_dump_path=data_dump_path, **kwargs)
     # map_string will be a graphviz-processable string
     map_string = write_dot.output_pairs_dict(map_dict, True)
 
@@ -68,10 +69,14 @@ if __name__ == "__main__":
     parser.add_argument('--term_type_name', type=str, default=TermExtraction.names[TermExtraction.Phrases], help="type of term to extract. Options: %s" % (TermExtraction.names))
     parser.add_argument('--debug', default=False, action="store_true", help="print status to stdout")
     parser.add_argument('--evaluation_output_path', help="run evaluation metrics, and dump files to this directory")
+    parser.add_argument('--data_dump_path', type=str, help="dump some pickle files to this path")
     args = vars(parser.parse_args())
+
     global debug
     debug = args['debug']
-    query = create_query(author=args['author'], journal=args['journal'], conference=args['conference'])
-    print make_map(query,
-                   term_type=TermExtraction.names.index(args['term_type_name']),
-                   **map_args(args))
+    with ManagedSession() as session:
+        query = create_query(session, author=args['author'], journal=args['journal'], conference=args['conference'])
+        print make_map(query,
+                       term_type=TermExtraction.names.index(args['term_type_name']),
+                       data_dump_path=args['data_dump_path'],
+                       **map_args(args))

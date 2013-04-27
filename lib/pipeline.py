@@ -2,7 +2,6 @@
 from utils import sub_lists
 import database as db
 import filtering
-# import pickle
 import ranking
 import similarity
 import simplification
@@ -193,7 +192,8 @@ def strip_dimensions(svg):
 
 def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
                        similarity_algorithm=2, filtering_algorithm=1,
-                       number_of_terms=1000, simplify_terms=False, model=None):
+                       number_of_terms=1000, simplify_terms=False, model=None,
+                       data_dump_path=None):
     """returns a pair similarity dictionary for the map and set of terms in the map. Heatmap can
     be calculated seperately and then overlaid. Will need to convert dictionary representation
     to dot file format"""
@@ -209,10 +209,17 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
         structured_nps = simplification.term_replacement(structured_nps, ranked_phrases)
     set_status('calculating similarity', model=model)
     sim_matrix, phrase_lookups = call_similarity(similarity_algorithm, structured_nps, ranked_phrases, model=model, status_callback=lambda s: set_status(s, model=model))
-    # with open('/tmp/sim_matrix.pickle', 'w') as f:
-    #     pickle.dump(sim_matrix, f)
-    # with open('/tmp/phrase_lookups.pickle', 'w') as f:
-    #     pickle.dump(phrase_lookups, f)
+    if data_dump_path:
+        import pickle
+        from os.path import join
+        def prefix_path(rel):
+            return join(data_dump_path, rel)
+        with open(prefix_path('sim_matrix.pickle'), 'w') as f:
+            pickle.dump(sim_matrix, f)
+        with open(prefix_path('phrase_lookups.pickle'), 'w') as f:
+            pickle.dump(phrase_lookups, f)
+        with open(prefix_path('phrase_frequencies.pickle'), 'w') as f:
+            pickle.dump(phrase_frequencies, f)
     phrase_pairs = call_filter(filtering_algorithm,  sim_matrix, phrase_lookups, model=model)
     normed = similarity.similarity_dict_to_distance(phrase_pairs)
     # build set of terms in graph
