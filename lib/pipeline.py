@@ -78,14 +78,20 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
     return term_counts
 
 def create_query(session, author=None, conference=None, journal=None):
+    """author combined with anything is an intersection. conference and journal combined with each other is a union"""
     query = session.query(db.Document)
     if author:
         query = db.Author.filter_document_query(query, author)
     if journal:
-        query = db.Journal.filter_document_query(query, journal)
-    if conference:
-        query = db.Conference.filter_document_query(query, conference)
-    return query
+        journal_query = db.Journal.filter_document_query(query, journal)
+        if conference:
+            return db.Conference.filter_document_query(query, conference).union(journal_query)
+        else:
+            return journal_query
+    elif conference:
+        return db.Conference.filter_document_query(query, conference)
+    else:
+        return query
 
 ranking_fns = [ranking.tfidf, ranking.cnc_bigrams, ranking.cnc_unigrams, ranking.tf]
 ranking_fn_names = ['TF/ICF', 'C-Value', 'C-Value with Unigrams', 'Term Frequency']

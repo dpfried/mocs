@@ -13,14 +13,14 @@
             overflow-x: hidden;
         }
         .ui-autocomplete-loading {
-        background: white url('http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/images/ui-anim_basic_16x16.gif') right center no-repeat;
+        background: white url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/images/ui-anim_basic_16x16.gif") right center no-repeat;
         }
         .search {
-            position:relative; top:2px; /* readujst in jsfiddle */
+            position:relative;  /* readujst in jsfiddle */
             width: 400px;
-            padding:8px 5px 8px 30px;
+            /* padding:8px 5px 8px 30px;*/
             border:1px solid #ccc;
-            background:white url("http://i.imgur.com/lFkqn.png") left center no-repeat;
+             /*background:white url("http://i.imgur.com/lFkqn.png") left center no-repeat;*/
         }
     </style>
     <script type="text/javascript">
@@ -30,30 +30,88 @@
                 <!-- $('#ranking_algorithm').val('1'); -->
                 <!-- $('#similarity_algorithm').val('2'); -->
                 <!-- $('#filtering_algorithm').val('1'); -->
-                $('#basemap_author').autocomplete({
-                    source: '{% url top_authors %}',
+
+                function split( val ) {
+                    return val.split( /;\s*/ );
+                }
+                function extractLast( term ) {
+                    return split(term).pop();
+                }
+
+                var keydown = function( event ) {
+                    if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) 
+                    {
+                        event.preventDefault();
+                    }
+                }
+
+                function source_maker(url) {
+                    return function(request, response) {
+                        console.debug('inside source for ' + url);
+                        console.debug(request.term);
+                        $.getJSON(url, { term: extractLast(request.term) }, response);
+                        /*
+                        $.ajax({
+                               dataType: "json",
+                               url: url,
+                               timeout: 30000,
+                               data: { 
+                                    term: extractLast(request.term)
+                                    },
+                               response: response});
+                        */
+                    }
+                }
+ 
+                var base_options = {
                     minLength: 3,
-                    });
-                $('#basemap_conference').autocomplete({
-                    source: '{% url top_conferences %}',
-                    minLength: 3,
-                    });
-                $('#basemap_journal').autocomplete({
-                    source: '{% url top_journals %}',
-                    minLength: 3,
-                    });
-                $('#heatmap_author').autocomplete({
-                    source: '{% url top_authors %}',
-                    minLength: 3,
-                    });
-                $('#heatmap_conference').autocomplete({
-                    source: '{% url top_conferences %}',
-                    minLength: 3,
-                    });
-                $('#heatmap_journal').autocomplete({
-                    source: '{% url top_journals %}',
-                    minLength: 3,
-                    });
+                    search: function() {
+                        // custom minLength
+                        var term = extractLast( this.value );
+                        if ( term.length < 2 ) {
+                            return false;
+                        }
+                    },
+                    focus: function() {
+                        // prevent value inserted on focus
+                        return false;
+                    },
+                    select: function( event, ui ) {
+                        var terms = split( this.value );
+                        // remove the current input
+                        terms.pop();
+                        // add the selected item
+                        terms.push( ui.item.value );
+                        // add placeholder to get the semicolon-and-space at the end
+                        terms.push( "" );
+                        this.value = terms.join( "; " );
+                        return false;
+                        }
+                    };
+                $('#basemap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#basemap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#basemap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
+                $('#heatmap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#heatmap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#heatmap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
                 $('#maps').accordion({
                     collapsible:true
                     });

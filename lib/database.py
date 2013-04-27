@@ -59,15 +59,23 @@ class DocumentFilterable(object):
         return query.join(cls)
 
     @classmethod
-    def filter_document_query(cls, query, name):
+    def filter_document_query(cls, query, names):
         joined = cls.join_on_documents(query)
-        with ManagedSession() as session:
+        def _query_for_single_name(session, full_set, name):
             if session.query(cls).filter(cls.name == name).count() > 0:
-                # print 'found exact match for %s' % (name)
-                return joined.filter(cls.name == name)
+                print 'found exact match for %s' % (name)
+                return full_set.filter(cls.name == name)
             else:
-                # print 'generalizing to %s' % (generalize(name))
-                return joined.filter(cls.name.like(generalize(name)))
+                print 'generalizing to %s' % (generalize(name))
+                return full_set.filter(cls.name.like(generalize(name)))
+
+        names_split_stripped = filter(lambda s: s, [name.strip() for name in names.split(';')])
+        print names_split_stripped
+        with ManagedSession() as session:
+            return reduce(lambda x, y: x.union(y),
+                          [_query_for_single_name(session, joined, name)
+                          for name in names_split_stripped
+                           if name])
 
 
 Base = declarative_base(cls=Base, constructor=Base._constructor)
