@@ -136,6 +136,7 @@ function get_node(text) {
 
 function draw_scaled_heatmap() {
     clear_heatmap();
+    var scaling_factor;
     var term_list = [];
     for (var term in heatmapTerms) {
         term_list.push(
@@ -147,6 +148,7 @@ function draw_scaled_heatmap() {
     }
 
     if (term_list.length > 0) {
+        console.debug(term_list);
         scaling_factor = term_list.map(function(d) { return Math.log(d.intensity + 1); })
             .reduce(function(p, c) { return Math.max(p,c); });
     }
@@ -178,7 +180,6 @@ function display_multiple_heatmaps(url_nums) {
 
 function add_highlight_terms(term_list) {
     /* term_list should be list of { term:"term", radius:r, intensity:i } objects*/
-    var scaling_factor;
     term_list.map(function(d) { 
         if (d.term in heatmapTerms) {
             heatmapTerms[d.term].intensity += d.intensity;

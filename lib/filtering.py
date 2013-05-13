@@ -1,44 +1,32 @@
 debug = False
+
+def phrase_pairs(row_accessor, indices, top_limit, load_factor):
+    phrase_pairs = {}
+    for index in xrange(min(top_limit, len(indices))):
+        phrase = indices[index]
+        row = row_accessor(index)
+        pairs = [(indices[i], s) for (i, s) in enumerate(row) if s > 0]
+        top = sorted(pairs, key=lambda pair: pair[1], reverse=True)
+        # just include edges
+        # that we haven't processed yet
+        # avoid double counts
+        phrase_pairs[phrase] = [(p, score) for (p, score) in top[:load_factor]
+                                if (p not in phrase_pairs)
+                                or (phrase not in [q for (q, s) in phrase_pairs[p]])]
+        # processed_phrases.add(phrase)
+    return phrase_pairs
+
 def top(similarity_matrix, indices, top_limit=500, load_factor=8):
     """ indices should contain phrases for every row and col in matrix,
     and they should be in order of decreasing ranking
     top_limit is the number that should be counted as top phrases"""
-    phrase_pairs = {}
-    found = set()
-    for index in xrange(min(top_limit, len(indices))):
-        phrase = indices[index]
-        row = similarity_matrix[index, :top_limit]
-        pairs = [(indices[i], s) for (i, s) in enumerate(row) if s > 0]
-        top = sorted(pairs, key=lambda pair: pair[1], reverse=True)
-        phrase_pairs[phrase] = top[:load_factor]
-        for p, s in phrase_pairs[phrase]:
-            found.add(p)
-
-    if debug:
-        print "filtered %d phrases" % len(found)
-    return phrase_pairs
+    return phrase_pairs(lambda index: similarity_matrix[index, :top_limit], indices, top_limit, load_factor)
 
 def pull_lesser(similarity_matrix, indices, top_limit=90, load_factor=8):
     """ indices should contain phrases for every row and col in matrix,
     and they should be in order of decreasing ranking
     top_limit is the number that should be counted as top phrases"""
-    phrase_pairs = {}
-    found = set()
-    total_len = 0
-    for index in xrange(min(top_limit, len(indices))):
-        phrase = indices[index]
-        row = similarity_matrix[index, :]
-        pairs = [(indices[i], s) for (i, s) in enumerate(row) if s > 0]
-        top = sorted(pairs, key=lambda pair: pair[1], reverse=True)
-        phrase_pairs[phrase] = top[:load_factor]
-        total_len += len(phrase_pairs[phrase])
-        found.add(phrase)
-        for p, s in phrase_pairs[phrase]:
-            found.add(p)
-    if debug:
-        print "filtered %d phrases" % len(found)
-        print "average phrases / top phrase %f" % (float(total_len) / top_limit)
-    return phrase_pairs
+    return phrase_pairs(lambda index: similarity_matrix[index, :], indices, top_limit, load_factor)
 
 def hybrid(similarity_matrix, indices, top_limit=100, load_factor=9):
     phrase_pairs = {}
