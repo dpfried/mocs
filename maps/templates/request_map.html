@@ -167,11 +167,15 @@
                 <label for='basemap_ending_year'>Ending Year:</label>
                 <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1950' max='2013' value='2013'>
                 <div id="basemap_year_range"></div>
+                <label for='basemap_author' >Author:</label><br>
+                <input type='text' id='basemap_author' name='basemap_author' class="search"><br>
+                <label for='basemap_conference'>Conference:</label><br>
+                <input type='text' id='basemap_conference' name='basemap_conference' class="search"><br>
+                <label for='basemap_journal'>Journal:</label><br>
+                <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
 
                 <label for='basemap_sample_size'>Number of Documents:</label><br>
                 <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'><br>
-                <label for='number_of_terms'>Number of Terms:</label><br>
-                <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1500'><br>
                 <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
                 <select name="ranking_algorithm" id="ranking_algorithm">
                     <option value="0">TF/ICF</option>
@@ -179,6 +183,8 @@
                     <option value="2" selected='selected'>C-Value + Unigrams</option>
                     <option value="3">TF</option>
                 </select><br>
+                <label for='number_of_terms'>Number of Terms:</label><br>
+                <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1500'><br>
                 <label for='similarity_algorithm'>Similarity Algorithm:</label><br>
                 <select name="similarity_algorithm" id="similarity_algorithm">
                     <option value="0">Latent Semantic Analysis</option>
@@ -195,15 +201,9 @@
                 <label for='basemap_term_type'>Term Type:</label><br>
                 <select name="basemap_term_type" id="basemap_term_type">
                     <option value="0" selected='selected'>Phrases</option>
-                    <option value="1">All Words</option>
+                    <!-- <option value="1">All Words</option> -->
                     <option value="2">Words From Phrases</option>
                 </select><br>
-                <label for='basemap_author' >Author:</label><br>
-                <input type='text' id='basemap_author' name='basemap_author' class="search"><br>
-                <label for='basemap_conference'>Conference:</label><br>
-                <input type='text' id='basemap_conference' name='basemap_conference' class="search"><br>
-                <label for='basemap_journal'>Journal:</label><br>
-                <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
             </div>
             <input type="checkbox" id='draw_heatmap' name="draw_heatmap" value="Heatmap" checked="checked">Include a Heatmap
         </div>
@@ -214,20 +214,20 @@
             <label for='heatmap_ending_year'>Ending Year:</label>
             <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1950' max='2013' value='2013'>
             <div id="heatmap_year_range"></div>
-            <label for='heatmap_sample_size'>Number of Documents:</label><br>
-            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'><br>
-            <label for='heatmap_term_type'>Term Type:</label><br>
-            <select name="heatmap_term_type" id="heatmap_term_type">
-                <option value="0">Phrases</option>
-                <option value="1">All Words</option>
-                <option value="2">Words From Phrases</option>
-            </select><br>
             <label for='heatmap_author'>Author:</label><br>
             <input type='text' id='heatmap_author' name='heatmap_author' class="search"><br>
             <label for='heatmap_conference'>Conference:</label><br>
             <input type='text' id='heatmap_conference' name='heatmap_conference' class="search"><br>
             <label for='heatmap_journal'>Journal:</label><br>
             <input type='text' id='heatmap_journal' name='heatmap_journal' class="search"><br>
+            <label for='heatmap_sample_size'>Number of Documents:</label><br>
+            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'><br>
+            <label for='heatmap_term_type'>Term Type:</label><br>
+            <select name="heatmap_term_type" id="heatmap_term_type">
+                <option value="0">Phrases</option>
+                <!-- <option value="1">All Words</option>-->
+                <option value="2">Words From Phrases</option>
+            </select>
         </div>
     </div>
 
