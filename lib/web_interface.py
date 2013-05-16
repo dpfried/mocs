@@ -84,7 +84,7 @@ def make_heatmap(heatmap, graph_terms):
         set_status('getting document list', model=heatmap)
         with ManagedSession() as session:
             heatmap_query= create_query(session, author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
-            filtered_query = filter_query(heatmap_query, dirty=True,
+            filtered_query = filter_query(heatmap_query, dirty=False,
                                         starting_year=heatmap.starting_year,
                                         ending_year=heatmap.ending_year,
                                         sample_size=heatmap.sample_size,
