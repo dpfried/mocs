@@ -153,7 +153,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" action='{% url request_map %} '>
+<form method="post" action='{% url request_map %}' accept-charset="UTF-8">
     {% csrf_token %}
     <div id='maps'>
         <h3>Basemap</h3>
