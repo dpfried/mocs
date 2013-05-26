@@ -1,3 +1,7 @@
 th {
     text-align:left;
 }
+
+.small_slider {
+    width: 200px !important;
+}

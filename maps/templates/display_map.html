@@ -44,7 +44,19 @@ if(typeof console === "undefined") {
 $(document).ready(function(){
         // $('#collapsible').accordion();
        get_basemap_status();
+       $('#opacity-slider').slider({ 
+             max:100,
+             min:0,
+             value:100,
+             animate: true,
+             change: opacity_slider_change,
+           });
 });
+
+function opacity_slider_change(event, ui) {
+    var opacity =  ui.value / 100.0;
+    $('.edge').children('path').attr('opacity', opacity);
+}
 
 function basemap_algorithm_string(basemap_metadata) {
     ranking_fn_names = ['TF/ICF', 'C-Value', 'C-Value with Unigrams', 'Term Frequency'];
@@ -352,6 +364,9 @@ function display_heatmap(heatmap_url) {
                 </td>
             </tr>
         </table>
+    </div>
+    <div id= 'opacity'>
+        Edge Opacity: <div id='opacity-slider' class='small_slider'></div>
     </div>
     <!--
     <div id='map' style='height:1200px'></div>
