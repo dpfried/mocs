@@ -236,9 +236,21 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     return normed, graph_terms, phrase_frequencies
 
 
+def do_test():
+    proc = Popen("wc", stdout=PIPE, stdin=PIPE, shell=True)
+    map_out, map_err = proc.communicate(input="hi there")
+    print map_out
+
+
 def call_graphviz(map_string, file_format='svg', model=None):
     """map_string should be a string in the dot file format, which the pipeline will be called on. Output in format file_format"""
     set_status('drawing graph', model=model)
-    proc = Popen(graphviz_command(file_format=file_format, **GRAPHVIZ_PARAMS), stdout=PIPE, stdin=PIPE, shell=True)
+    gv_command = graphviz_command(file_format=file_format, **GRAPHVIZ_PARAMS)
+    proc = Popen('echo $PATH', stdout=PIPE, shell=True)
+    print "path:", proc.communicate(input='')[0]
+    proc = Popen(gv_command, stdout=PIPE, stdin=PIPE, shell=True)
     map_out, map_err = proc.communicate(input=map_string)
+    print "return code:", proc.returncode
+    if map_err:
+        print map_err
     return map_out
