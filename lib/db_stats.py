@@ -1,5 +1,5 @@
 import nltk
-import lib.database as db
+import lib.mocs_database as db
 session = db.Session()
 session.query(db.Document)
 doc_q = session.query(db.Document)

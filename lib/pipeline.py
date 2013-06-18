@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from utils import sub_lists
-import database as db
+import mocs_database as db
 import filtering
 import ranking
 import similarity
