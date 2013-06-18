@@ -6,3 +6,4 @@ celeryd.pid
 create_superuser.py
 local_settings.py
 celery.log
+celeryd
