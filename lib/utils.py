@@ -33,6 +33,11 @@ def hashable(x):
 def first(fn, seq):
     return (s for s in seq if fn(s)).next()
 
+def drop(n, seq):
+    for i in range(n):
+        seq.next()
+    return seq
+
 def flatten(lists):
     """flatten a list of lists by one level. [[1,2], [3,4], [[5],6]] -> [1,2,3,4,[5],6]"""
     return [x for lst in lists for x in lst]
@@ -52,3 +57,7 @@ def jsonize_phrase_set(phrase_set, term_to_str_fn=lambda tpl: ' '.join(tpl)):
         return [term_to_str_fn(tpl) for tpl in phrase_set]
     else:
         return list(phrase_set)
+
+def compose(f, g):
+    def foo(*args, **kwargs):
+        return f(g(*args, **kwargs))

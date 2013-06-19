@@ -11,7 +11,6 @@ def create_all():
 
 SDBBase = declarative_base(cls=Base, constructor=Base._constructor)
 
-
 class GrantFilterable(object):
     @classmethod
     def join_on_documents(cls, query):
@@ -41,8 +40,12 @@ author_grant_table = Table('sdb_author_grant', SDBBase.metadata,
                               Column('grant_id', Integer, ForeignKey('sdb_grant.id'), primary_key=True)
                               )
 
+class Unique:
+    def uuid(self):
+        pass
+
 ### models start here ###
-class Grant(SDBBase):
+class Grant(SDBBase, Unique):
     __tablename__ = 'sdb_grant'
     id = Column(Integer, primary_key=True)
     sdb_id = Column(Integer)
@@ -74,7 +77,10 @@ class Grant(SDBBase):
                     t_list.append(s)
         return t_list
 
-class Author(SDBBase):
+    def uuid(self):
+        return self.id
+
+class Author(SDBBase, Unique):
     __tablename__ = 'sdb_author'
     id = Column(Integer, primary_key=True)
     first_name = Column(UnicodeText)
@@ -95,7 +101,10 @@ class Author(SDBBase):
     def __unicode__(self):
         return u'%s' % self.name
 
-class Institution(SDBBase, GrantFilterable):
+    def uuid(self):
+        return self.name
+
+class Institution(SDBBase, GrantFilterable, Unique):
     """Institutions can have multiple grants, backreferenced through Institution.grants (see Grant class)"""
     __tablename__ = 'sdb_institution'
     id = Column(Integer, primary_key=True)
@@ -120,6 +129,9 @@ class Institution(SDBBase, GrantFilterable):
 
     def __unicode__(self):
         return u'%s' % self.name
+
+    def uuid(self):
+        return self.sdb_id
 
 if __name__ == '__main__':
     engine.echo = True
