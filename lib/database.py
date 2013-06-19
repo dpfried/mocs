@@ -20,6 +20,8 @@ class ManagedSession:
     def __exit__(self, type, value, traceback):
         self._session.close()
 
+def stringify_terms(list_of_tuples):
+    return ','.join(' '.join(tpl) for tpl in list_of_tuples)
 
 
 ### utilities ###

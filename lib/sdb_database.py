@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Boolean, UnicodeText, Date, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from database import engine, Session, ManagedSession, sliced_query, Base, generalize
+from database import engine, Session, ManagedSession, sliced_query, Base, generalize, stringify_terms
 
 ### configuration ###
 echo = False
@@ -48,8 +48,8 @@ class Unique:
 class Grant(SDBBase, Unique):
     __tablename__ = 'sdb_grant'
     id = Column(Integer, primary_key=True)
-    sdb_id = Column(Integer)
-    award_number = Column(Integer)
+    sdb_id = Column(UnicodeText)
+    award_number = Column(UnicodeText)
     date_started = Column(Date)
     date_expires = Column(Date)
     published_year = Column(Integer)
@@ -62,10 +62,10 @@ class Grant(SDBBase, Unique):
                            secondary=author_grant_table,
                            backref='grants')
     institution_id = Column(Integer, ForeignKey('sdb_institution.id'))
-    institution = relationship('sdb_institution', backref='grants')
+    institution = relationship('Institution', backref='grants')
 
     def __unicode__(self):
-        return u'(%s, %s, %s, %s)' % (self.title, self.year, self.terms, self.clean)
+        return u'(%s, %s, %s, %s)' % (self.sdb_id, self.title, self.terms, self.clean)
 
     def terms_list(self):
         """ read the serialized terms list and return a list of tuples, which are this doc's terms """
@@ -78,7 +78,7 @@ class Grant(SDBBase, Unique):
         return t_list
 
     def uuid(self):
-        return self.id
+        return self.sdb_id
 
 class Author(SDBBase, Unique):
     __tablename__ = 'sdb_author'
@@ -88,8 +88,7 @@ class Author(SDBBase, Unique):
     last_name = Column(UnicodeText)
     name = Column(UnicodeText)
 
-    def __init__(self, **kwargs):
-        self(**kwargs)
+    def set_name(self, **kwargs):
         first = kwargs.get('first_name')
         middle = kwargs.get('middle_name')
         last = kwargs.get('last_name')
@@ -108,7 +107,7 @@ class Institution(SDBBase, GrantFilterable, Unique):
     """Institutions can have multiple grants, backreferenced through Institution.grants (see Grant class)"""
     __tablename__ = 'sdb_institution'
     id = Column(Integer, primary_key=True)
-    sdb_id = Column(Integer)
+    sdb_id = Column(UnicodeText)
     name = Column(UnicodeText)
 
     # @classmethod
