@@ -39,6 +39,9 @@ def sandwich(record, lookup):
                 for field_name, cast_fn in lookup.items()
                 if record.get(field_name, '').strip())
 
+def regularize_spaces(text):
+    return ' '.join(text.split())
+
 def grant_from_csv(csv_fields):
     """populate the attributes of sdb_db.Grant from a csv record"""
     # every row should have something in the id column
@@ -49,17 +52,23 @@ def grant_from_csv(csv_fields):
         'date_started': parse_date,
         'date_expires': parse_date,
         'published_year': int,
-        'title': lambda s: s.strip().lower(),
-        'abstract': lambda s: s.strip().lower()
+        'title': regularize_spaces,
+        'abstract': regularize_spaces
     }))
-    params['clean'] = bool(params.get('title') or params.get('abstract'))
+    title = (params.get('title') or "")
+    abstract = (params.get('abstract') or "")
+    params['clean'] = bool(title or abstract)
     terms = []
-    if params.get('title'):
-        terms += noun_phrases(params.get('title'))
-    if params.get('abstract'):
-        terms += noun_phrases(params.get('abstract'))
+    if title:
+        terms += noun_phrases(title.lower())
+    if abstract:
+        terms += noun_phrases(abstract)
     params['terms'] = sdb_db.stringify_terms(terms)
     return sdb_db.Grant(**params)
+
+def ok_name(*names):
+    lower_names = [name.lower() for name in names]
+    return 'data not available' not in lower_names and 'none' not in lower_names and (lower_names[0] != 'n' or lower_names[2] != 'n')
 
 def authors_from_csv(csv_fields):
     first = lambda n: 'name_first_%d' % n
@@ -70,11 +79,12 @@ def authors_from_csv(csv_fields):
         names = [csv_fields[acc(i)].strip() for acc in [first, middle, last]]
         if not any(names):
             break
-        else:
-            names = dict(zip(['first_name', 'middle_name', 'last_name'], names))
-            author = sdb_db.Author(**names)
-            author.set_name(**names)
-            authors.append(author)
+        if not ok_name(*names):
+            continue
+        names = dict(zip(['first_name', 'middle_name', 'last_name'], names))
+        author = sdb_db.Author(**names)
+        author.set_name(**names)
+        authors.append(author)
     return authors
 
 def institution_from_csv(csv_fields):
