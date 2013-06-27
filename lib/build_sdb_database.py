@@ -58,13 +58,15 @@ def grant_from_csv(csv_fields):
     title = (params.get('title') or "")
     abstract = (params.get('abstract') or "")
     params['clean'] = bool(title or abstract)
+
+def update_terms(grant):
     terms = []
-    if title:
-        terms += noun_phrases(title.lower())
-    if abstract:
-        terms += noun_phrases(abstract)
-    params['terms'] = sdb_db.stringify_terms(terms)
-    return sdb_db.Grant(**params)
+    if grant.title:
+        terms += noun_phrases(grant.title.lower())
+    if grant.abstract:
+        terms += noun_phrases(grant.abstract)
+    grant.terms = sdb_db.stringify_terms(terms)
+    grant.save()
 
 def ok_name(*names):
     lower_names = [name.lower() for name in names]
@@ -114,6 +116,7 @@ def load_from_file(filename, offset=None):
             if grant.uuid() in grants_memo:
                 present_count += 1
                 continue
+            update_terms(grant)
             # print grant
             authors = authors_from_csv(csv_fields)
             if authors:

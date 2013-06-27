@@ -1,4 +1,4 @@
-from lib.web_interface import request_task, request_heatmap, create_task_and_maps, create_task_with_existing_basemap
+from lib.nsf_web_interface import request_task, request_heatmap, create_task_and_maps, create_task_with_existing_basemap
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse
@@ -16,7 +16,7 @@ def request_map(request):
         else:
             task = create_task_and_maps(dict(request.POST.items()), include_heatmap=include_heatmap)
             request_task.delay(task.id)
-        return redirect('display_map', task.id)
+        return redirect('nsf_display_map', task.id)
 
 def display_map(request, task_id):
     if request.method == 'GET':
@@ -26,7 +26,7 @@ def display_map(request, task_id):
             'basemap_id': task.basemap.id,
             'heatmap_id': task.heatmap.id if task.heatmap is not None else -1
         }
-        return render_to_response('display_map.html', {'data': data})
+        return render_to_response('nsf_maps/display_map.html', {'data': data})
 
 def task_status(request, task_id):
     if request.method == 'GET':
@@ -69,4 +69,4 @@ def basemap_for_task_id(request, task_id):
 
 def query(request):
     if request.method == 'GET':
-        return render_to_response('request_map.html', context_instance=RequestContext(request))
+        return render_to_response('nsf_maps/request_map.html', context_instance=RequestContext(request))

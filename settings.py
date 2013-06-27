@@ -11,7 +11,7 @@ def abspath(*args):
 
 # celery settings
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_IMPORTS = ('lib.web_interface',)
+CELERY_IMPORTS = ('lib.web_interface', 'lib.nsf_web_interface')
 CELERY_PID_FILENAME = abspath('celeryd.pid')
 CELERY_LOG_FILENAME = abspath('celeryd.log')
 CELERY_SEND_TASK_ERROR_EMAILS = True
@@ -122,6 +122,8 @@ INSTALLED_APPS = (
     'celerytest',
     'maps',
     'dblp',
+    'nsf',
+    'nsf_maps',
     'google_analytics',
 )
 

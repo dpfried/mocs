@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}{{ block.super }} -- Map Generation{% endblock %}
+
+{% block js %}
+{{ block.super }}
+{% load static %}
+    <style>
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+        .ui-autocomplete-loading {
+        background: white url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/images/ui-anim_basic_16x16.gif") right center no-repeat;
+        }
+        .search {
+            position:relative;  /* readujst in jsfiddle */
+            width: 400px;
+            /* padding:8px 5px 8px 30px;*/
+            border:1px solid #ccc;
+             /*background:white url("http://i.imgur.com/lFkqn.png") left center no-repeat;*/
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+                // set defaults for dropdown boxes
+                $('.spinner').spinner();
+                <!-- $('#ranking_algorithm').val('1'); -->
+                <!-- $('#similarity_algorithm').val('2'); -->
+                <!-- $('#filtering_algorithm').val('1'); -->
+
+                function split( val ) {
+                    return val.split( /;\s*/ );
+                }
+                function extractLast( term ) {
+                    return split(term).pop();
+                }
+
+                var keydown = function( event ) {
+                    if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) 
+                    {
+                        event.preventDefault();
+                    }
+                }
+
+                function source_maker(url) {
+                    return function(request, response) {
+                        console.debug('inside source for ' + url);
+                        console.debug(request.term);
+                        $.getJSON(url, { term: extractLast(request.term) }, response);
+                        /*
+                        $.ajax({
+                               dataType: "json",
+                               url: url,
+                               timeout: 30000,
+                               data: { 
+                                    term: extractLast(request.term)
+                                    },
+                               response: response});
+                        */
+                    }
+                }
+ 
+                var base_options = {
+                    minLength: 3,
+                    search: function() {
+                        // custom minLength
+                        var term = extractLast( this.value );
+                        if ( term.length < 2 ) {
+                            return false;
+                        }
+                    },
+                    focus: function() {
+                        // prevent value inserted on focus
+                        return false;
+                    },
+                    select: function( event, ui ) {
+                        var terms = split( this.value );
+                        // remove the current input
+                        terms.pop();
+                        // add the selected item
+                        terms.push( ui.item.value );
+                        // add placeholder to get the semicolon-and-space at the end
+                        terms.push( "" );
+                        this.value = terms.join( "; " );
+                        return false;
+                        }
+                    };
+                $('#basemap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url nsf_top_authors %}'),
+                    }));
+                $('#basemap_institution').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url nsf_top_institutions %}'),
+                    }));
+                $('#heatmap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url nsf_top_authors %}'),
+                    }));
+                $('#heatmap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url nsf_top_institutions %}'),
+                    }));
+                $('#maps').accordion({
+                    collapsible:true
+                    });
+                $('#submit').button();
+                $('#basemap_year_range').slider({
+                    range:true,
+                    min:1900,
+                    max:2013,
+                    values:[1900,2013],
+                    slide:function(event, ui) {
+                    $('#basemap_starting_year').val(ui.values[0]);
+                    $('#basemap_ending_year').val(ui.values[1]);
+                    }});
+                $('#heatmap_year_range').slider({
+                    range:true,
+                    min:1900,
+                    max:2013,
+                    values:[1900,2013],
+                    slide:function(event, ui) {
+                    $('#heatmap_starting_year').val(ui.values[0]);
+                    $('#heatmap_ending_year').val(ui.values[1]);
+                    } });
+
+                $("#use_existing_basemap").change(function() {
+                    if ($("#use_existing_basemap").prop("checked")) {
+                        console.debug('checked');
+                        $('#new_map_elements :input').attr("disabled", "disabled");
+                        $('#existing_task_id').removeAttr("disabled");
+                    }
+                    else {
+                        console.debug('unchecked');
+                        $('#new_map_elements :input').removeAttr("disabled");
+                        $('#existing_task_id').attr("disabled", "disabled");
+                    }
+                });
+
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+<form method="post" action='{% url nsf_request_map %}' accept-charset="UTF-8">
+    {% csrf_token %}
+    <div id='maps'>
+        <h3>Basemap</h3>
+        <div id='basemap_inner'>
+            <input type="checkbox" id='use_existing_basemap' name="use_existing_basemap">Use Existing Basemap<br>
+            <label for='existing_task_id'>ID of Task:</label><br>
+            <input id='existing_task_id' disabled name='existing_task_id'>
+            <div id='new_map_elements'>
+                <label for='basemap_starting_year'>Starting Year:</label>
+                <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1900' max='2013' value='1900'>
+                <label for='basemap_ending_year'>Ending Year:</label>
+                <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1900' max='2013' value='2013'>
+                <div id="basemap_year_range"></div>
+                <label for='basemap_author' >Author:</label><br>
+                <input type='text' id='basemap_author' name='basemap_author' class="search"><br>
+                <label for='basemap_institution'>Institution:</label><br>
+                <input type='text' id='basemap_institution' name='basemap_institution' class="search"><br>
+
+                <label for='basemap_sample_size'>Number of Documents:</label><br>
+                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'><br>
+                <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
+                <select name="ranking_algorithm" id="ranking_algorithm">
+                    <option value="0">TF/ICF</option>
+                    <option value="1">C-Value</option>
+                    <option value="2" selected='selected'>C-Value + Unigrams</option>
+                    <option value="3">TF</option>
+                </select><br>
+                <label for='number_of_terms'>Number of Terms:</label><br>
+                <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1500'><br>
+                <label for='similarity_algorithm'>Similarity Algorithm:</label><br>
+                <select name="similarity_algorithm" id="similarity_algorithm">
+                    <option value="0">Latent Semantic Analysis</option>
+                    <option value="1">Jaccard</option>
+                    <option value="2" selected='selected'>Jaccard Partial Match</option>
+                    <option value="3">Distributional (Jensen-Shannon)</option>
+                </select><br>
+                <label for='filtering_algorithm'>Filtering Algorithm:</label><br>
+                <select name="filtering_algorithm" id="filtering_algorithm">
+                    <option value="0">Top Terms Only</option>
+                    <option value="1" selected='selected'>Pull Lesser Terms</option>
+                    <option value="2">Hybrid</option>
+                </select><br>
+                <label for='basemap_term_type'>Term Type:</label><br>
+                <select name="basemap_term_type" id="basemap_term_type">
+                    <option value="0" selected='selected'>Phrases</option>
+                    <!-- <option value="1">All Words</option> -->
+                    <option value="2">Words From Phrases</option>
+                </select><br>
+            </div>
+            <input type="checkbox" id='draw_heatmap' name="draw_heatmap" value="Heatmap" checked="checked">Include a Heatmap
+        </div>
+        <h3>Heatmap</h3>
+        <div id='heatmap_inner'>
+            <label for='heatmap_starting_year'>Starting Year:</label>
+            <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1900' max='2013' value='1900'>
+            <label for='heatmap_ending_year'>Ending Year:</label>
+            <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1900' max='2013' value='2013'>
+            <div id="heatmap_year_range"></div>
+            <label for='heatmap_author'>Author:</label><br>
+            <input type='text' id='heatmap_author' name='heatmap_author' class="search"><br>
+            <label for='heatmap_institution'>Institution:</label><br>
+            <input type='text' id='heatmap_institution' name='heatmap_institution' class="search"><br>
+            <label for='heatmap_sample_size'>Number of Documents:</label><br>
+            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'><br>
+            <label for='heatmap_term_type'>Term Type:</label><br>
+            <select name="heatmap_term_type" id="heatmap_term_type">
+                <option value="0">Phrases</option>
+                <!-- <option value="1">All Words</option>-->
+                <option value="2">Words From Phrases</option>
+            </select>
+        </div>
+    </div>
+
+        <input id='submit' value='Create Map' type='submit'>
+    </form>
+{% endblock %}

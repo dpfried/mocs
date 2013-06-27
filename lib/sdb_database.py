@@ -154,9 +154,9 @@ def filter_query(query, dirty=False, starting_year=None, ending_year=None,
     if not dirty:
         filtered = query.filter(Grant.clean == True)
     if ending_year is not None:
-        filtered = filtered.filter(Grant.year <= ending_year)
+        filtered = filtered.filter(Grant.published_year <= ending_year)
     if starting_year is not None:
-        filtered = filtered.filter(Grant.year >= starting_year)
+        filtered = filtered.filter(Grant.published_year >= starting_year)
     if model is not None:
         documents_in_set = filtered.count()
         model.documents_in_set = documents_in_set

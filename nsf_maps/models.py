@@ -25,8 +25,8 @@ class Basemap(models.Model):
     author = models.CharField(max_length=255)
     institution = models.CharField(max_length=255)
 
-    grants_in_set = models.IntegerField(null=True, blank=True)
-    grants_sampled = models.IntegerField(null=True, blank=True)
+    documents_in_set = models.IntegerField(null=True, blank=True)
+    documents_sampled = models.IntegerField(null=True, blank=True)
 
     phrase_frequencies = models.TextField()
     phrases_in_map = models.TextField()

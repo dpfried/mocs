@@ -1,7 +1,7 @@
-from maps.models import Task, Basemap, Heatmap
+from nsf_maps.models import Task, Basemap, Heatmap
 from celery.task import task
 from database import ManagedSession
-from mocs_database import create_query, filter_query
+from sdb_database import create_query, filter_query
 from pipeline import calculate_heatmap_values, map_representation, strip_dimensions, call_graphviz, extract_terms
 from status import set_status
 from utils import flatten, jsonize_phrase_dict, jsonize_phrase_set
@@ -19,8 +19,7 @@ def create_task_and_maps(task_parameters, include_heatmap=True):
         'similarity_algorithm': int,
         'filtering_algorithm': int,
         'basemap_author': (str, 'author'),
-        'basemap_conference': (str, 'conference'),
-        'basemap_journal': (str, 'journal'),
+        'basemap_institution': (str, 'institution'),
         'basemap_term_type': (int, 'term_type'),
 
     if include_heatmap then also pass the following:
@@ -28,8 +27,7 @@ def create_task_and_maps(task_parameters, include_heatmap=True):
         'heatmap_ending_year': (int, "ending_year"),
         'heatmap_sample_size': (int, "sample_size"),
         'heatmap_author': (str, 'author'),
-        'heatmap_conference': (str, 'conference'),
-        'heatmap_journal': (str, 'journal'),
+        'heatmap_institution': (str, 'institution'),
         'heatmap_term_type': (int, 'term_type'),
 )
     '''
@@ -83,11 +81,11 @@ def make_heatmap(heatmap, graph_terms):
     try:
         set_status('getting document list', model=heatmap)
         with ManagedSession() as session:
-            heatmap_query= create_query(session, author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
+            heatmap_query= create_query(session, author=heatmap.author, institution=heatmap.institution)
             filtered_query = filter_query(heatmap_query, dirty=False,
-                                        starting_year=heatmap.starting_year,
-                                        ending_year=heatmap.ending_year,
-                                        sample_size=heatmap.sample_size,
+                                          starting_year=heatmap.starting_year,
+                                          ending_year=heatmap.ending_year,
+                                          sample_size=heatmap.sample_size,
                                         model=heatmap)
             extracted_terms = extract_terms(filtered_query, heatmap.term_type)
         heatmap_terms = flatten(extracted_terms)
@@ -105,12 +103,12 @@ def make_basemap(basemap):
     try:
         set_status('getting document list', model=basemap)
         with ManagedSession() as session:
-            basemap_query = create_query(session, author=basemap.author, conference=basemap.conference, journal=basemap.journal)
+            basemap_query = create_query(session, author=basemap.author, institution=basemap.institution)
             documents = filter_query(basemap_query, dirty=False,
-                                    starting_year=basemap.starting_year,
-                                    ending_year=basemap.ending_year,
-                                    sample_size=basemap.sample_size,
-                                    model=basemap)
+                                     starting_year=basemap.starting_year,
+                                     ending_year=basemap.ending_year,
+                                     sample_size=basemap.sample_size,
+                                     model=basemap)
             extracted_terms = extract_terms(documents, basemap.term_type)
         if not extracted_terms:
             raise Exception('No documents found matching query!')
@@ -171,8 +169,7 @@ filter_basemap_args = _make_arg_filter(
         'similarity_algorithm': int,
         'filtering_algorithm': int,
         'basemap_author': (unicode, 'author'),
-        'basemap_conference': (unicode, 'conference'),
-        'basemap_journal': (unicode, 'journal'),
+        'basemap_institution': (unicode, 'institution'),
         'basemap_term_type': (int, 'term_type'),
     }
 )
@@ -186,7 +183,6 @@ filter_heatmap_args = _make_arg_filter(
         'heatmap_sample_size': (int, "sample_size"),
         'heatmap_author': (unicode, 'author'),
         'heatmap_conference': (unicode, 'conference'),
-        'heatmap_journal': (unicode, 'journal'),
         'heatmap_term_type': (int, 'term_type'),
     }
 )

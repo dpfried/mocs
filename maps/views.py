@@ -26,7 +26,7 @@ def display_map(request, task_id):
             'basemap_id': task.basemap.id,
             'heatmap_id': task.heatmap.id if task.heatmap is not None else -1
         }
-        return render_to_response('display_map.html', {'data': data})
+        return render_to_response('maps/display_map.html', {'data': data})
 
 def task_status(request, task_id):
     if request.method == 'GET':
@@ -69,4 +69,4 @@ def basemap_for_task_id(request, task_id):
 
 def query(request):
     if request.method == 'GET':
-        return render_to_response('request_map.html', context_instance=RequestContext(request))
+        return render_to_response('maps/request_map.html', context_instance=RequestContext(request))
