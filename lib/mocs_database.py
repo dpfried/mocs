@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, Boolean, UnicodeText, Table, ForeignKey,
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from database import Base, engine, generalize, ManagedSession
+from status import set_status
 
 def create_all():
     MOCSBase.metadata.create_all(engine)
@@ -144,6 +145,43 @@ class Conference(MOCSBase, DocumentFilterable):
 
     def __unicode__(self):
         return u'%s' % self.name
+
+def filter_query(query, dirty=False, starting_year=None, ending_year=None,
+                 sample_size=None, model=None):
+    filtered = query
+    if not dirty:
+        filtered = query.filter(Document.clean == True)
+    if ending_year is not None:
+        filtered = filtered.filter(Document.year <= ending_year)
+    if starting_year is not None:
+        filtered = filtered.filter(Document.year >= starting_year)
+    if model is not None:
+        documents_in_set = filtered.count()
+        model.documents_in_set = documents_in_set
+        set_status('%d documents met filtering criteria' % documents_in_set)
+    if sample_size is not None:
+        filtered = filtered.order_by(func.rand()).limit(sample_size)
+    if model is not None:
+        documents_sampled = filtered.count()
+        model.documents_sampled = documents_sampled
+        set_status('%d documents were sampled' % documents_sampled)
+    return filtered
+
+def create_query(session, author=None, conference=None, journal=None):
+    """author combined with anything is an intersection. conference and journal combined with each other is a union"""
+    query = session.query(Document)
+    if author:
+        query = Author.filter_document_query(query, author)
+    if journal:
+        journal_query = Journal.filter_document_query(query, journal)
+        if conference:
+            return Conference.filter_document_query(query, conference).union(journal_query)
+        else:
+            return journal_query
+    elif conference:
+        return Conference.filter_document_query(query, conference)
+    else:
+        return query
 
 if __name__ == '__main__':
     engine.echo = True

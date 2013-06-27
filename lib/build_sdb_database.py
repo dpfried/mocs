@@ -103,7 +103,8 @@ def load_from_file(filename, offset=None):
     grants_memo = load_memo_from_database(sdb_db.Grant)
     author_memo = load_memo_from_database(sdb_db.Author)
     institution_memo = load_memo_from_database(sdb_db.Institution)
-    count = 0
+    present_count = 0
+    added_count = 0
     if offset:
         print 'starting at row %d' % offset
     with open(filename) as f, ManagedSession() as session:
@@ -111,6 +112,7 @@ def load_from_file(filename, offset=None):
         for csv_fields in (reader if offset is None else drop(offset, reader)):
             grant = grant_from_csv(csv_fields)
             if grant.uuid() in grants_memo:
+                present_count += 1
                 continue
             # print grant
             authors = authors_from_csv(csv_fields)
@@ -130,13 +132,16 @@ def load_from_file(filename, offset=None):
             if institution:
                 grant.institution = memoized_row(institution_memo, institution)
             session.add(grant)
-            count += 1
+            added_count += 1
             grants_memo[grant.uuid()] = grant
-            if (count % 1000 == 0):
+            if (added_count % 1000 == 0):
                 session.commit()
-                print 'created %s records' % count
+                print '%s more records added' % added_count
         session.commit()
-        print 'created total of %s records' % count
+        print '-----------------------'
+        print '%s records were added' % added_count
+        print '%s records already in the db' % present_count
+        print '%s total records parsed' % (added_count + present_count)
 
 if __name__ == '__main__':
     # mapping of author, journal, and conference names to existing rows in database

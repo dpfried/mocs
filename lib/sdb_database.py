@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, Boolean, UnicodeText, Date, ForeignKey, Table
+from sqlalchemy import Column, Integer, Boolean, UnicodeText, Date, ForeignKey, Table, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from database import engine, Session, ManagedSession, sliced_query, Base, generalize, stringify_terms
+from status import set_status
 
 ### configuration ###
 echo = False
@@ -103,6 +104,21 @@ class Author(SDBBase, Unique):
     def uuid(self):
         return self.name
 
+    @classmethod
+    def join_on_documents(cls, query):
+        return query.join(Author, Grant.authors)
+
+    @classmethod
+    def name_like_top(cls, name_like, n=10):
+        with ManagedSession() as session:
+            try:
+                return session.query(Author, func.count(author_grant_table.c.document_id).label('doc_count'))\
+                        .filter(Author.name.like(name_like)).join(author_grant_table).group_by(Author).order_by('doc_count DESC').slice(0, n).all()
+            except:
+                session.rollback()
+                raise
+
+
 class Institution(SDBBase, GrantFilterable, Unique):
     """Institutions can have multiple grants, backreferenced through Institution.grants (see Grant class)"""
     __tablename__ = 'sdb_institution'
@@ -110,20 +126,20 @@ class Institution(SDBBase, GrantFilterable, Unique):
     sdb_id = Column(UnicodeText)
     name = Column(UnicodeText)
 
-    # @classmethod
-    # def name_like_top(cls, name_like, n=10):
-    #     with ManagedSession() as session:
-    #         try:
-    #             stmt = session.query(Document.journal_id, func.count('*').label('doc_count'))\
-    #                     .group_by(Document.journal_id)\
-    #                     .subquery()
-    #             return session.query(Journal, stmt.c.doc_count)\
-    #                     .filter(Journal.name.like(name_like))\
-    #                     .outerjoin(stmt, Journal.id == stmt.c.journal_id)\
-    #                     .order_by('doc_count DESC').slice(0, n).all()
-    #         except:
-    #             session.rollback()
-    #             raise
+    @classmethod
+    def name_like_top(cls, name_like, n=10):
+        with ManagedSession() as session:
+            try:
+                stmt = session.query(Grant.institution_id, func.count('*').label('doc_count'))\
+                        .group_by(Grant.institution_id)\
+                        .subquery()
+                return session.query(Institution, stmt.c.doc_count)\
+                        .filter(Institution.name.like(name_like))\
+                        .outerjoin(stmt, Institution.id == stmt.c.institution_id)\
+                        .order_by('doc_count DESC').slice(0, n).all()
+            except:
+                session.rollback()
+                raise
 
 
     def __unicode__(self):
@@ -131,6 +147,37 @@ class Institution(SDBBase, GrantFilterable, Unique):
 
     def uuid(self):
         return self.sdb_id
+
+def filter_query(query, dirty=False, starting_year=None, ending_year=None,
+                 sample_size=None, model=None):
+    filtered = query
+    if not dirty:
+        filtered = query.filter(Grant.clean == True)
+    if ending_year is not None:
+        filtered = filtered.filter(Grant.year <= ending_year)
+    if starting_year is not None:
+        filtered = filtered.filter(Grant.year >= starting_year)
+    if model is not None:
+        documents_in_set = filtered.count()
+        model.documents_in_set = documents_in_set
+        set_status('%d documents met filtering criteria' % documents_in_set)
+    if sample_size is not None:
+        filtered = filtered.order_by(func.rand()).limit(sample_size)
+    if model is not None:
+        documents_sampled = filtered.count()
+        model.documents_sampled = documents_sampled
+        set_status('%d documents were sampled' % documents_sampled)
+    return filtered
+
+def create_query(session, author=None, institution=None):
+    """instersection of author and institution"""
+    query = session.query(Grant)
+    if author:
+        query = Author.filter_document_query(query, author)
+    if institution:
+        query = Institution.filter_document_query(query, institution)
+    return query
+
 
 if __name__ == '__main__':
     engine.echo = True
