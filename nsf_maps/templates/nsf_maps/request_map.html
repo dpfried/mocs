@@ -100,7 +100,7 @@
                     .autocomplete($.extend(base_options, {
                     source: source_maker('{% url nsf_top_authors %}'),
                     }));
-                $('#heatmap_conference').bind("keydown", keydown)
+                $('#heatmap_institution').bind("keydown", keydown)
                     .autocomplete($.extend(base_options, {
                     source: source_maker('{% url nsf_top_institutions %}'),
                     }));
@@ -165,7 +165,7 @@
                 <input type='text' id='basemap_institution' name='basemap_institution' class="search"><br>
 
                 <label for='basemap_sample_size'>Number of Documents:</label><br>
-                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'><br>
+                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='10000' value='1000'><br>
                 <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
                 <select name="ranking_algorithm" id="ranking_algorithm">
                     <option value="0">TF/ICF</option>

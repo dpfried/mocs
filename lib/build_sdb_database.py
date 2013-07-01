@@ -58,6 +58,7 @@ def grant_from_csv(csv_fields):
     title = (params.get('title') or "")
     abstract = (params.get('abstract') or "")
     params['clean'] = bool(title or abstract)
+    return sdb_db.Grant(**params)
 
 def update_terms(grant):
     terms = []
@@ -66,7 +67,6 @@ def update_terms(grant):
     if grant.abstract:
         terms += noun_phrases(grant.abstract)
     grant.terms = sdb_db.stringify_terms(terms)
-    grant.save()
 
 def ok_name(*names):
     lower_names = [name.lower() for name in names]

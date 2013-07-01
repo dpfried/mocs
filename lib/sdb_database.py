@@ -81,7 +81,7 @@ class Grant(SDBBase, Unique):
     def uuid(self):
         return self.sdb_id
 
-class Author(SDBBase, Unique):
+class Author(SDBBase, Unique, GrantFilterable):
     __tablename__ = 'sdb_author'
     id = Column(Integer, primary_key=True)
     first_name = Column(UnicodeText)
@@ -112,7 +112,7 @@ class Author(SDBBase, Unique):
     def name_like_top(cls, name_like, n=10):
         with ManagedSession() as session:
             try:
-                return session.query(Author, func.count(author_grant_table.c.document_id).label('doc_count'))\
+                return session.query(Author, func.count(author_grant_table.c.grant_id).label('doc_count'))\
                         .filter(Author.name.like(name_like)).join(author_grant_table).group_by(Author).order_by('doc_count DESC').slice(0, n).all()
             except:
                 session.rollback()
