@@ -4,7 +4,7 @@ from lib.mocs_database import Author, Conference, Journal
 from utils import json_response
 
 def to_val_list(named_tpls, name_lookup_fn, doc_lookup_fn = lambda t: t.doc_count):
-    return [{'label': '%s : %d' % (name_lookup_fn(named_tpl), doc_lookup_fn(named_tpl)),
+    return [{'label': '%s : %d papers' % (name_lookup_fn(named_tpl), doc_lookup_fn(named_tpl)),
              'value': name_lookup_fn(named_tpl)}
             for named_tpl in named_tpls]
 

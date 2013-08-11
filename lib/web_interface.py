@@ -21,7 +21,7 @@ def create_task_and_maps(task_parameters, include_heatmap=True):
         'basemap_author': (str, 'author'),
         'basemap_conference': (str, 'conference'),
         'basemap_journal': (str, 'journal'),
-        'basemap_term_type': (int, 'term_type'),
+        'term_type': int,
 
     if include_heatmap then also pass the following:
         'heatmap_starting_year': (int, "starting_year"),
@@ -30,7 +30,7 @@ def create_task_and_maps(task_parameters, include_heatmap=True):
         'heatmap_author': (str, 'author'),
         'heatmap_conference': (str, 'conference'),
         'heatmap_journal': (str, 'journal'),
-        'heatmap_term_type': (int, 'term_type'),
+        'term_type': int,
 )
     '''
     # set up new objects
@@ -173,7 +173,7 @@ filter_basemap_args = _make_arg_filter(
         'basemap_author': (unicode, 'author'),
         'basemap_conference': (unicode, 'conference'),
         'basemap_journal': (unicode, 'journal'),
-        'basemap_term_type': (int, 'term_type'),
+        'term_type': int,
     }
 )
 
@@ -187,6 +187,6 @@ filter_heatmap_args = _make_arg_filter(
         'heatmap_author': (unicode, 'author'),
         'heatmap_conference': (unicode, 'conference'),
         'heatmap_journal': (unicode, 'journal'),
-        'heatmap_term_type': (int, 'term_type'),
+        'term_type': int,
     }
 )
