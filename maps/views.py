@@ -70,3 +70,7 @@ def basemap_for_task_id(request, task_id):
 def query(request):
     if request.method == 'GET':
         return render_to_response('maps/request_map.html', context_instance=RequestContext(request))
+
+def dev_query(request):
+    if request.method == 'GET':
+        return render_to_response('maps/request_map_dev.html', context_instance=RequestContext(request))
