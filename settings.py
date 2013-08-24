@@ -11,7 +11,7 @@ def abspath(*args):
 
 # celery settings
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
-CELERY_IMPORTS = ('lib.web_interface',)
+CELERY_IMPORTS = ('lib.web_interface', 'lib.nsf_web_interface')
 CELERY_PID_FILENAME = abspath('celeryd.pid')
 CELERY_LOG_FILENAME = abspath('celeryd.log')
 CELERY_SEND_TASK_ERROR_EMAILS = True
@@ -60,12 +60,12 @@ MEDIA_URL = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = '/static2/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+ADMIN_MEDIA_PREFIX = '/static2/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -122,6 +122,8 @@ INSTALLED_APPS = (
     'celerytest',
     'maps',
     'dblp',
+    'nsf',
+    'nsf_maps',
     'google_analytics',
 )
 
