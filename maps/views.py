@@ -74,3 +74,6 @@ def query(request):
 def dev_query(request):
     if request.method == 'GET':
         return render_to_response('maps/request_map_dev.html', context_instance=RequestContext(request))
+
+def new_query(request):
+    return render_to_response('maps/request_map_new.html', context_instance=RequestContext(request))
