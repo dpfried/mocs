@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}{{ block.super }} -- Map Generation{% endblock %}
+
+{% block js %}
+{{ block.super }}
+{% load static %}
+<link href="{% get_static_prefix%}css/jquery.stepy.css" rel="stylesheet">
+<script src="{% get_static_prefix %}js/jquery.stepy.js"></script>
+    <style>
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+        .ui-autocomplete-loading {
+        background: white url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/images/ui-anim_basic_16x16.gif") right center no-repeat;
+        }
+        .search {
+            position:relative;  /* readujst in jsfiddle */
+            width: 400px;
+            /* padding:8px 5px 8px 30px;*/
+            border:1px solid #ccc;
+             /*background:white url("http://i.imgur.com/lFkqn.png") left center no-repeat;*/
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+                // set defaults for dropdown boxes
+                $('.spinner').spinner();
+
+                function split( val ) {
+                    return val.split( /;\s*/ );
+                }
+                function extractLast( term ) {
+                    return split(term).pop();
+                }
+
+                var keydown = function( event ) {
+                    if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) 
+                    {
+                        event.preventDefault();
+                    }
+                }
+
+                function advanced_toggle_clicked(event) {
+                    elem = $(event.target);
+                    advanced_div = elem.parent().children('.advanced_options');
+                    var visible = advanced_div.data('visible');
+                    if (visible) {
+                        advanced_div.slideUp();
+                        elem.text('advanced options >>');
+                        advanced_div.data('visible', false);
+                    }
+                    else {
+                        advanced_div.slideDown();
+                        elem.text('advanced options <<');
+                        advanced_div.data('visible', true);
+                    }
+                }
+
+                function source_maker(url) {
+                    return function(request, response) {
+                        console.debug('inside source for ' + url);
+                        console.debug(request.term);
+                        $.getJSON(url, { term: extractLast(request.term) }, response);
+                    }
+                }
+ 
+                var base_options = {
+                    minLength: 3,
+                    search: function() {
+                        // custom minLength
+                        var term = extractLast( this.value );
+                        if ( term.length < 2 ) {
+                            return false;
+                        }
+                    },
+                    focus: function() {
+                        // prevent value inserted on focus
+                        return false;
+                    },
+                    select: function( event, ui ) {
+                        var terms = split( this.value );
+                        // remove the current input
+                        terms.pop();
+                        // add the selected item
+                        terms.push( ui.item.value );
+                        // add placeholder to get the semicolon-and-space at the end
+                        terms.push( "" );
+                        this.value = terms.join( "; " );
+                        return false;
+                        }
+                    };
+                $('#basemap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#basemap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#basemap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
+                $('#heatmap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#heatmap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#heatmap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
+                $('#map_form').stepy(
+                        {
+                    titleClick: true,
+                    description: false,
+                        });
+                $('.advanced_toggle').button()
+                    .text('advanced options >>')
+                    .click(advanced_toggle_clicked);
+
+                $('#submit').button();
+                $('#basemap_year_range').slider({
+                    range:true,
+                    min:1950,
+                    max:2013,
+                    values:[1950,2013],
+                    slide:function(event, ui) {
+                    $('#basemap_starting_year').val(ui.values[0]);
+                    $('#basemap_ending_year').val(ui.values[1]);
+                    }});
+
+                $('#heatmap_year_range').slider({
+                    range:true,
+                    min:1950,
+                    max:2013,
+                    values:[1950,2013],
+                    slide:function(event, ui) {
+                    $('#heatmap_starting_year').val(ui.values[0]);
+                    $('#heatmap_ending_year').val(ui.values[1]);
+                    } });
+                /* heatmap checkbox stuff */
+                /* set the div visibility on page load since the user may have checked
+                   it in a previous view of the form, which is being remembered by
+                   the browser */
+                if ($('#draw_heatmap').is(':checked')) {
+                    $('#heatmap_inner').show();
+                }
+                else {
+                    $('#heatmap_inner').hide();
+                }
+                $('#draw_heatmap').change(function() {
+                        if ($('#draw_heatmap').is(':checked')) {
+                            $('#heatmap_inner').slideDown();
+                        }
+                        else {
+                            $('#heatmap_inner').slideUp();
+                        }
+                        });
+
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <form id="map_form" method="post" action='{% url request_map %}' accept-charset="UTF-8">
+    {% csrf_token %}
+        <fieldset title="Basemap">
+            <legend>Create a basemap from paper titles:</legend>
+            <fieldset>
+                <legend>select basemap papers by author and venue</legend>
+                <p>Type in these fields to search and select from a list of
+                matching authors and venues.  Or, leave the fields blank to sample
+                from all available DBLP papers. You can use '%' as a wildcard character.</p>
+                <label for='basemap_author' >Author:</label><br>
+                <input type='text' id='basemap_author' name='basemap_author' class="search"><br>
+                <label for='basemap_conference'>Conference:</label><br>
+                <input type='text' id='basemap_conference' name='basemap_conference' class="search"><br>
+                <label for='basemap_journal'>Journal:</label><br>
+                <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
+            </fieldset>
+
+            <fieldset>
+                <legend>select by date range</legend>
+                <label for='basemap_starting_year'>Starting:</label>
+                <input id='basemap_starting_year' title='<b>Starting Year:</b>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1950' max='2013' value='1950'>
+                <label for='basemap_ending_year'>Ending:</label>
+                <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1950' max='2013' value='2013'>
+                <div id="basemap_year_range"></div>
+            </fieldset>
+
+            <div id='basemap_advanced_toggle' class='advanced_toggle'></div>
+            <div id='basemap_advanced_options' class='advanced_options' style='display: none;'>
+                <fieldset>
+                    <legend>advanced options</legend>
+                    <label for='basemap_sample_size'>Max number of documents to sample:</label><br>
+                    <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'>
+                </div>
+            </fieldset>
+        </fieldset>
+
+        <fieldset title="Heatmap">
+            <legend>Draw a heatmap over the basemap (optional):</legend>
+            <input type="checkbox" id='draw_heatmap' name="draw_heatmap" value="Heatmap">Include a Heatmap
+            <div id='heatmap_inner'>
+                <fieldset>
+                    <legend>select heatmap papers by author and venue</legend>
+                    <p>Type in these fields to search and select from a list of
+                    matching authors and venues.  Or, leave the fields blank to sample
+                    from all available DBLP papers. You can use '%' as a wildcard character.</p>
+                    <label for='heatmap_author'>Author:</label><br>
+                    <input type='text' id='heatmap_author' name='heatmap_author' class="search"><br>
+                    <label for='heatmap_conference'>Conference:</label><br>
+                    <input type='text' id='heatmap_conference' name='heatmap_conference' class="search"><br>
+                    <label for='heatmap_journal'>Journal:</label><br>
+                    <input type='text' id='heatmap_journal' name='heatmap_journal' class="search">
+                </fieldset>
+                <fieldset>
+                    <legend>select by date range</legend>
+                    <label for='heatmap_starting_year'>Starting:</label>
+                    <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1950' max='2013' value='1950'>
+                    <label for='heatmap_ending_year'>Ending:</label>
+                    <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1950' max='2013' value='2013'>
+                    <div id="heatmap_year_range"></div>
+                </fieldset>
+
+                <div id='heatmap_advanced_toggle' class='advanced_toggle'></div>
+                    <div id='heatmap_advanced_options' class='advanced_options' style='display: none;'>
+                        <fieldset>
+                            <legend>advanced options</legend>
+                            <label for='heatmap_sample_size'>Max number of documents to sample:</label><br>
+                            <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'>
+                        </fieldset>
+                    </div>
+            </div>
+        </fieldset>
+
+        <fieldset title="Map Details">
+            <legend>Choose the term type to display:</legend>
+            <label for='term_type'>Term Type:</label><br>
+            <select name="term_type" id="term_type">
+                <option value="0">Multi Word (recommended)</option>
+                <!-- <option value="1">All Words</option>-->
+                <option value="2">Single Word (word-cloud style)</option>
+            </select><br>
+            <div id='map_advanced_toggle' class='advanced_toggle'></div>
+            <div id='map_advanced_options' class='advanced_options' style='display: none;'>
+                <fieldset>
+                    <legend>advanced options</legend>
+                    <label for='number_of_terms'>Number of Terms:</label><br>
+                    <input id='number_of_terms'  class='spinner' name='number_of_terms' min='100' max='5000' value='1500'><br>
+                    <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
+                    <select name="ranking_algorithm" id="ranking_algorithm">
+                        <option value="0">TF/ICF</option>
+                        <option value="1">C-Value</option>
+                        <option value="2" selected='selected'>C-Value + Unigrams</option>
+                        <option value="3">TF</option>
+                    </select><br>
+                    <label for='similarity_algorithm'>Similarity Algorithm:</label><br>
+                    <select name="similarity_algorithm" id="similarity_algorithm">
+                        <option value="0">Latent Semantic Analysis</option>
+                        <option value="1">Jaccard</option>
+                        <option value="2" selected='selected'>Jaccard Partial Match</option>
+                        <!-- <option value="3">Distributional (Jensen-Shannon)</option> -->
+                    </select><br>
+                    <label for='filtering_algorithm'>Filtering Algorithm:</label><br>
+                    <select name="filtering_algorithm" id="filtering_algorithm">
+                        <option value="0">Top Terms Only</option>
+                        <option value="1" selected='selected'>Pull Lesser Terms</option>
+                        <!-- <option value="2">Hybrid</option> -->
+                    </select><br>
+                </fieldset>
+            </div>
+        </fieldset>
+        <input id='submit' value='Create Map' class='finish' type='submit'>
+    </form>
+{% endblock %}

@@ -90,27 +90,19 @@
                     };
                 $('#basemap_author').bind("keydown", keydown)
                     .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_authors %}'),
+                    source: source_maker('{% url nsf_top_authors %}'),
                     }));
-                $('#basemap_conference').bind("keydown", keydown)
+                $('#basemap_institution').bind("keydown", keydown)
                     .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_conferences %}'),
-                    }));
-                $('#basemap_journal').bind("keydown", keydown)
-                    .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_journals %}'),
+                    source: source_maker('{% url nsf_top_institutions %}'),
                     }));
                 $('#heatmap_author').bind("keydown", keydown)
                     .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_authors %}'),
+                    source: source_maker('{% url nsf_top_authors %}'),
                     }));
-                $('#heatmap_conference').bind("keydown", keydown)
+                $('#heatmap_institution').bind("keydown", keydown)
                     .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_conferences %}'),
-                    }));
-                $('#heatmap_journal').bind("keydown", keydown)
-                    .autocomplete($.extend(base_options, {
-                    source: source_maker('{% url top_journals %}'),
+                    source: source_maker('{% url nsf_top_institutions %}'),
                     }));
                 $('#maps').accordion({
                     collapsible:true
@@ -118,18 +110,18 @@
                 $('#submit').button();
                 $('#basemap_year_range').slider({
                     range:true,
-                    min:1950,
+                    min:1900,
                     max:2013,
-                    values:[1950,2013],
+                    values:[1900,2013],
                     slide:function(event, ui) {
                     $('#basemap_starting_year').val(ui.values[0]);
                     $('#basemap_ending_year').val(ui.values[1]);
                     }});
                 $('#heatmap_year_range').slider({
                     range:true,
-                    min:1950,
+                    min:1900,
                     max:2013,
-                    values:[1950,2013],
+                    values:[1900,2013],
                     slide:function(event, ui) {
                     $('#heatmap_starting_year').val(ui.values[0]);
                     $('#heatmap_ending_year').val(ui.values[1]);
@@ -153,7 +145,7 @@
 {% endblock %}
 
 {% block content %}
-<form method="post" action='{% url request_map %}' accept-charset="UTF-8">
+<form method="post" action='{% url nsf_request_map %}' accept-charset="UTF-8">
     {% csrf_token %}
     <div id='maps'>
         <h3>Basemap</h3>
@@ -163,19 +155,17 @@
             <input id='existing_task_id' disabled name='existing_task_id'>
             <div id='new_map_elements'>
                 <label for='basemap_starting_year'>Starting Year:</label>
-                <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1950' max='2013' value='1950'>
+                <input id='basemap_starting_year' title='<b>Starting Year:</b><br>Only include documents published in this year or later.' class='spinner' name='basemap_starting_year' min='1900' max='2013' value='1900'>
                 <label for='basemap_ending_year'>Ending Year:</label>
-                <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1950' max='2013' value='2013'>
+                <input id='basemap_ending_year' class='spinner' name='basemap_ending_year' min='1900' max='2013' value='2013'>
                 <div id="basemap_year_range"></div>
                 <label for='basemap_author' >Author:</label><br>
                 <input type='text' id='basemap_author' name='basemap_author' class="search"><br>
-                <label for='basemap_conference'>Conference:</label><br>
-                <input type='text' id='basemap_conference' name='basemap_conference' class="search"><br>
-                <label for='basemap_journal'>Journal:</label><br>
-                <input type='text' id='basemap_journal' name='basemap_journal' class="search"><br>
+                <label for='basemap_institution'>Institution:</label><br>
+                <input type='text' id='basemap_institution' name='basemap_institution' class="search"><br>
 
                 <label for='basemap_sample_size'>Number of Documents:</label><br>
-                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='50000' value='30000'><br>
+                <input id='basemap_sample_size'  class='spinner' name='basemap_sample_size' min='100' max='10000' value='1000'><br>
                 <label for='ranking_algorithm'>Ranking Algorithm:</label><br>
                 <select name="ranking_algorithm" id="ranking_algorithm">
                     <option value="0">TF/ICF</option>
@@ -210,16 +200,14 @@
         <h3>Heatmap</h3>
         <div id='heatmap_inner'>
             <label for='heatmap_starting_year'>Starting Year:</label>
-            <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1950' max='2013' value='1950'>
+            <input id='heatmap_starting_year' class='spinner' name='heatmap_starting_year' min='1900' max='2013' value='1900'>
             <label for='heatmap_ending_year'>Ending Year:</label>
-            <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1950' max='2013' value='2013'>
+            <input id='heatmap_ending_year' class='spinner' name='heatmap_ending_year' min='1900' max='2013' value='2013'>
             <div id="heatmap_year_range"></div>
             <label for='heatmap_author'>Author:</label><br>
             <input type='text' id='heatmap_author' name='heatmap_author' class="search"><br>
-            <label for='heatmap_conference'>Conference:</label><br>
-            <input type='text' id='heatmap_conference' name='heatmap_conference' class="search"><br>
-            <label for='heatmap_journal'>Journal:</label><br>
-            <input type='text' id='heatmap_journal' name='heatmap_journal' class="search"><br>
+            <label for='heatmap_institution'>Institution:</label><br>
+            <input type='text' id='heatmap_institution' name='heatmap_institution' class="search"><br>
             <label for='heatmap_sample_size'>Number of Documents:</label><br>
             <input id='heatmap_sample_size' class='spinner' class='spinner' name='heatmap_sample_size' min='100' max='50000' value='2000'><br>
             <label for='heatmap_term_type'>Term Type:</label><br>

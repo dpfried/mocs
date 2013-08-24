@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}{{ block.super }} -- Map Generation{% endblock %}
+
+{% block js %}
+{{ block.super }}
+{% load static %}
+    <style>
+        .ui-autocomplete {
+            max-height: 100px;
+            overflow-y: auto;
+            /* prevent horizontal scrollbar */
+            overflow-x: hidden;
+        }
+        .ui-autocomplete-loading {
+        background: white url("http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/themes/smoothness/images/ui-anim_basic_16x16.gif") right center no-repeat;
+        }
+        .search {
+            position:relative;  /* readujst in jsfiddle */
+            width: 400px;
+            /* padding:8px 5px 8px 30px;*/
+            border:1px solid #ccc;
+             /*background:white url("http://i.imgur.com/lFkqn.png") left center no-repeat;*/
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function() {
+                // set defaults for dropdown boxes
+                $('.spinner').spinner();
+
+                function split( val ) {
+                    return val.split( /;\s*/ );
+                }
+                function extractLast( term ) {
+                    return split(term).pop();
+                }
+
+                var keydown = function( event ) {
+                    if ( event.keyCode === $.ui.keyCode.TAB && $( this ).data( "ui-autocomplete" ).menu.active ) 
+                    {
+                        event.preventDefault();
+                    }
+                }
+
+                function advanced_toggle_clicked(event) {
+                    elem = $(event.target);
+                    advanced_div = elem.parent().children('.advanced_options');
+                    var visible = advanced_div.data('visible');
+                    if (visible) {
+                        advanced_div.slideUp();
+                        elem.text('advanced options >>');
+                        advanced_div.data('visible', false);
+                    }
+                    else {
+                        advanced_div.slideDown();
+                        elem.text('advanced options <<');
+                        advanced_div.data('visible', true);
+                    }
+                }
+
+                function source_maker(url) {
+                    return function(request, response) {
+                        console.debug('inside source for ' + url);
+                        console.debug(request.term);
+                        $.getJSON(url, { term: extractLast(request.term) }, response);
+                    }
+                }
+ 
+                var base_options = {
+                    minLength: 3,
+                    search: function() {
+                        // custom minLength
+                        var term = extractLast( this.value );
+                        if ( term.length < 2 ) {
+                            return false;
+                        }
+                    },
+                    focus: function() {
+                        // prevent value inserted on focus
+                        return false;
+                    },
+                    select: function( event, ui ) {
+                        var terms = split( this.value );
+                        // remove the current input
+                        terms.pop();
+                        // add the selected item
+                        terms.push( ui.item.value );
+                        // add placeholder to get the semicolon-and-space at the end
+                        terms.push( "" );
+                        this.value = terms.join( "; " );
+                        return false;
+                        }
+                    };
+                $('#basemap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#basemap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#basemap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
+                $('#heatmap_author').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_authors %}'),
+                    }));
+                $('#heatmap_conference').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_conferences %}'),
+                    }));
+                $('#heatmap_journal').bind("keydown", keydown)
+                    .autocomplete($.extend(base_options, {
+                    source: source_maker('{% url top_journals %}'),
+                    }));
+                $('#submit').button();
+                /* heatmap checkbox stuff */
+                /* set the div visibility on page load since the user may have checked
+                   it in a previous view of the form, which is being remembered by
+                   the browser */
+
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+{% endblock %}

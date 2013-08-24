@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from utils import sub_lists
-import database as db
 import filtering
 import ranking
 import similarity
@@ -9,11 +8,10 @@ from mocs_config import GRAPHVIZ_PARAMS
 from subprocess import Popen, PIPE
 from re import sub, search
 from collections import Counter
-from sqlalchemy.sql.expression import func
-from status import set_status
 from utils import flatten, hashable
 from chunking import STOP_WORDS
 from nltk.tokenize import word_tokenize
+from status import set_status
 
 debug = False
 
@@ -22,27 +20,6 @@ USE_SFDP_FOR_LAYOUT = False
 # a regular expression to extract width and height from the svg, and then
 # eliminate these attributes
 SVG_DIMENSION_REPLACEMENT = ('<svg width="(.*)pt" height="(.*)pt"', '<svg')
-
-def filter_query(query, dirty=False, starting_year=None, ending_year=None,
-                 sample_size=None, model=None):
-    filtered = query
-    if not dirty:
-        filtered = query.filter(db.Document.clean == True)
-    if ending_year is not None:
-        filtered = filtered.filter(db.Document.year <= ending_year)
-    if starting_year is not None:
-        filtered = filtered.filter(db.Document.year >= starting_year)
-    if model is not None:
-        documents_in_set = filtered.count()
-        model.documents_in_set = documents_in_set
-        set_status('%d documents met filtering criteria' % documents_in_set)
-    if sample_size is not None:
-        filtered = filtered.order_by(func.rand()).limit(sample_size)
-    if model is not None:
-        documents_sampled = filtered.count()
-        model.documents_sampled = documents_sampled
-        set_status('%d documents were sampled' % documents_sampled)
-    return filtered
 
 class TermExtraction:
     '''hacky enum for use by extract_terms'''
@@ -76,22 +53,6 @@ def calculate_heatmap_values(heatmap_terms, graph_terms, model=None):
             term_counts[hashable(term)] += 1
     # term_counts = Counter(term for term in heatmap_terms if hashable(term) in graph_terms)
     return term_counts
-
-def create_query(session, author=None, conference=None, journal=None):
-    """author combined with anything is an intersection. conference and journal combined with each other is a union"""
-    query = session.query(db.Document)
-    if author:
-        query = db.Author.filter_document_query(query, author)
-    if journal:
-        journal_query = db.Journal.filter_document_query(query, journal)
-        if conference:
-            return db.Conference.filter_document_query(query, conference).union(journal_query)
-        else:
-            return journal_query
-    elif conference:
-        return db.Conference.filter_document_query(query, conference)
-    else:
-        return query
 
 ranking_fns = [ranking.tfidf, ranking.cnc_bigrams, ranking.cnc_unigrams, ranking.tf]
 ranking_fn_names = ['TF/ICF', 'C-Value', 'C-Value with Unigrams', 'Term Frequency']
@@ -234,12 +195,6 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
         graph_terms.add(term)
         graph_terms.update(term for term, val in lst)
     return normed, graph_terms, phrase_frequencies
-
-
-def do_test():
-    proc = Popen("wc", stdout=PIPE, stdin=PIPE, shell=True)
-    map_out, map_err = proc.communicate(input="hi there")
-    print map_out
 
 
 def call_graphviz(map_string, file_format='svg', model=None):
