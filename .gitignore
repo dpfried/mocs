@@ -7,3 +7,4 @@ create_superuser.py
 local_settings.py
 celery.log
 celeryd
+request_map2.html
