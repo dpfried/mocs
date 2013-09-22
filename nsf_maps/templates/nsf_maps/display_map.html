@@ -71,13 +71,13 @@ function basemap_algorithm_string(basemap_metadata) {
 function update_basemap_status(basemap_metadata) {
     $('#basemap_algorithms').text(basemap_algorithm_string(basemap_metadata));
     var docs_sampled = basemap_metadata.documents_sampled == null ? 'sampling' : basemap_metadata.documents_sampled;
-    $('#basemap_query').text(docs_sampled + ' titles from ' +  basemap_metadata.institution + ' ' + basemap_metadata.author + (basemap_metadata.starting_year + '-' + basemap_metadata.ending_year));
+    $('#basemap_query').text(docs_sampled + ' grants from ' +  basemap_metadata.institution + ' ' + basemap_metadata.author + (basemap_metadata.starting_year + '-' + basemap_metadata.ending_year));
     $('#basemap_status').text(basemap_metadata.status);
 }
 
 function update_heatmap_status(heatmap_metadata) {
     var docs_sampled = heatmap_metadata.documents_sampled == null ? 'sampling' : heatmap_metadata.documents_sampled;
-    $('#heatmap_query').text(docs_sampled + ' titles from ' +  heatmap_metadata.institution + heatmap_metadata.author + (heatmap_metadata.starting_year + '-' + heatmap_metadata.ending_year));
+    $('#heatmap_query').text(docs_sampled + ' grants from ' +  heatmap_metadata.institution + heatmap_metadata.author + (heatmap_metadata.starting_year + '-' + heatmap_metadata.ending_year));
     $('#heatmap_status').text(heatmap_metadata.status);
 }
 
