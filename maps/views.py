@@ -3,6 +3,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.http import HttpResponse
 from maps.models import Task, Basemap, Heatmap
+from lib.pipeline import call_graphviz
 # Create your views here.
 
 def request_map(request):
@@ -37,9 +38,22 @@ def task_status(request, task_id):
             status = 'complete'
         return HttpResponse(u'%s' % status)
 
+MIME_TYPES = {
+    'pdf': 'application/pdf',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'gif': 'image/gif',
+    'svg': 'image/svg+xml',
+}
+
 def basemap(request, basemap_id):
     if request.method == 'GET':
         basemap = Basemap.objects.get(id=basemap_id)
+        if 'ft' in request.GET:
+            ft = request.GET['ft']
+            if ft in MIME_TYPES:
+                output = call_graphviz(basemap.dot_rep, file_format=ft, model=basemap)
+                return HttpResponse(output, content_type=MIME_TYPES[ft])
         if basemap.finished:
             return HttpResponse(u'%s' % basemap.svg_rep)
         else:
