@@ -1,17 +1,20 @@
 header = """graph G {
-node [shape=plaintext];
+forcelabels=false;
+node [label="", shape=plaintext];
 """
 
 footer = "}"
 
-def node_string(node, level=None, fontsize=14):
-    if level is not None:
-        return '"%s" [level=%f, fontsize=%s]\n' % (node, level, fontsize)
-    else:
-        return '"%s" [fontsize=%s]\n' % (node, fontsize)
+def node_string(node, **kwargs):
+    if 'fontsize' not in kwargs:
+        kwargs = kwargs.copy()
+        kwargs['fontsize'] = 14
+    params = ", ".join("%s=%s" % (key, value) for key, value in kwargs.items())
+    return '"%s" [%s]\n' % (node, params)
 
-def pair_string(name1, name2, length, weight):
-    return '"%s" -- "%s"[len=%.5f, weight=%d]\n' % (name1, name2, length, weight)
+def pair_string(name1, name2, **kwargs):
+    params = ", ".join("%s=%s" % (key, value) for key, value in kwargs.items())
+    return '"%s" -- "%s"[%s]\n' % (name1, name2, params)
 
 def safe_string(tpl):
     try:
@@ -31,7 +34,7 @@ def output_pairs(labels, dist_matrix, dist_filter=lambda x: x != 1):
     for i in range(N):
         for j in range(i+1, N):
             if dist_filter(dist_matrix[i][j]):
-                graph_rep += pair_string(safe_string(labels[i]), safe_string(labels[j]), dist_matrix[i][j], 1)
+                graph_rep += pair_string(safe_string(labels[i]), safe_string(labels[j]), len=dist_matrix[i][j], weight=1)
     graph_rep += footer
     return graph_rep
 
@@ -42,7 +45,7 @@ def create_font_size_function(phrase_frequencies, min_size=12, max_size=30):
         return int((freq - min_freq) / float(max_freq - min_freq) * (max_size - min_size) + min_size)
     return font_size_from_frequency
 
-def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None, true_scaling=False, phrase_frequencies=None):
+def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None, true_scaling=False, phrase_frequencies=None, similarities=None, phrase_scores=None):
     graph_rep = header
 
     graph_terms = set()
@@ -64,10 +67,16 @@ def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None,
             level = heatmap_vals[term]
         else:
             level = 0
-        graph_rep += node_string(safe_string(term), level=level, fontsize=fontsize)
+        kwargs = {'level': level, 'fontsize': fontsize, 'freq':phrase_frequencies[term]}
+        if phrase_scores:
+            kwargs['imp'] = phrase_scores[term]
+        graph_rep += node_string(safe_string(term), **kwargs)
 
     for phrase1, pairs in pair_similarity.iteritems():
-        for phrase2, similarity in pairs:
-            graph_rep += pair_string(safe_string(phrase1), safe_string(phrase2), similarity, 1)
+        if similarities:
+            similarity_pairs = dict(similarities[phrase1])
+        for phrase2, distance in pairs:
+            kwargs = {'sim': similarity_pairs[phrase2]} if similarities else {}
+            graph_rep += pair_string(safe_string(phrase1), safe_string(phrase2), len=distance, weight=1, **kwargs)
     graph_rep += footer
     return graph_rep

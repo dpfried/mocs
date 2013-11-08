@@ -51,6 +51,11 @@ $(document).ready(function(){
              animate: true,
              change: opacity_slider_change,
            });
+       $('#collapsible').dblclick(function (source) {
+           $('#collapsible').toggle();
+           $('#opacity').toggle();
+           $('#map').css('height', $(document).height());
+       });
 });
 
 function opacity_slider_change(event, ui) {

@@ -103,7 +103,7 @@ def call_rank(ranking_index, flattened, n_large, start_words=[], model=None):
         top_phrases = large_phrases
 
     filtered_frequencies = dict((phrase, freq) for (phrase, freq) in phrase_frequencies.items() if phrase in top_phrases)
-    return top_phrases, filtered_frequencies
+    return top_phrases, filtered_frequencies, scored_phrases
 call_rank.functions = ranking_fns
 call_rank.default = ranking_fns.index(ranking.cnc_bigrams)
 
@@ -169,9 +169,9 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     if start_words is not None:
         # start words should be a list like ["machine learning", "artificial intelligence"]
         start_words = [tuple(s.split()) for s in start_words]
-        ranked_phrases, phrase_frequencies = call_rank(ranking_algorithm, flattened, number_of_terms, start_words=start_words, model=model)
+        ranked_phrases, phrase_frequencies, scored_phrases = call_rank(ranking_algorithm, flattened, number_of_terms, start_words=start_words, model=model)
     else:
-        ranked_phrases, phrase_frequencies = call_rank(ranking_algorithm, flattened, number_of_terms, model=model)
+        ranked_phrases, phrase_frequencies, scored_phrases = call_rank(ranking_algorithm, flattened, number_of_terms, model=model)
     if simplify_terms:
         structured_nps = simplification.term_replacement(structured_nps, ranked_phrases)
     set_status('calculating similarity', model=model)
@@ -194,7 +194,7 @@ def map_representation(structured_nps, start_words=None, ranking_algorithm=1,
     for term, lst in normed.items():
         graph_terms.add(term)
         graph_terms.update(term for term, val in lst)
-    return normed, graph_terms, phrase_frequencies
+    return normed, graph_terms, phrase_frequencies, phrase_pairs, scored_phrases
 
 
 def call_graphviz(map_string, file_format='svg', model=None):

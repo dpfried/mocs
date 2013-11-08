@@ -44,6 +44,7 @@ MIME_TYPES = {
     'jpg': 'image/jpeg',
     'gif': 'image/gif',
     'svg': 'image/svg+xml',
+    'dot': 'text/plain',
 }
 
 def basemap(request, basemap_id):

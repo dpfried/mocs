@@ -1,7 +1,7 @@
 from maps.models import Task, Basemap, Heatmap
 from celery.task import task
 from database import ManagedSession
-from mocs_database import create_query, filter_query
+from mocs_database import create_query_for_model
 from pipeline import calculate_heatmap_values, map_representation, strip_dimensions, call_graphviz, extract_terms
 from status import set_status
 from utils import flatten, jsonize_phrase_dict, jsonize_phrase_set
@@ -56,7 +56,10 @@ def create_task_with_existing_basemap(basemap_id, heatmap_task_parameters):
         'heatmap_term_type': (int, 'term_type'),
     """
     basemap = Basemap.objects.get(id=basemap_id)
-    heatmap = Heatmap(finished=False, **filter_heatmap_args(heatmap_task_parameters))
+    heatmap_params = filter_heatmap_args(heatmap_task_parameters)
+    heatmap_params['term_type'] = basemap.term_type
+
+    heatmap = Heatmap(finished=False, **heatmap_params)
     heatmap.save()
     task = Task(basemap=basemap, heatmap=heatmap)
     task.save()
@@ -83,12 +86,7 @@ def make_heatmap(heatmap, graph_terms):
     try:
         set_status('getting document list', model=heatmap)
         with ManagedSession() as session:
-            heatmap_query= create_query(session, author=heatmap.author, conference=heatmap.conference, journal=heatmap.journal)
-            filtered_query = filter_query(heatmap_query, dirty=False,
-                                        starting_year=heatmap.starting_year,
-                                        ending_year=heatmap.ending_year,
-                                        sample_size=heatmap.sample_size,
-                                        model=heatmap)
+            filtered_query = create_query_for_model(session, heatmap, dirty=False)
             extracted_terms = extract_terms(filtered_query, heatmap.term_type)
         heatmap_terms = flatten(extracted_terms)
         heatmap_vals = calculate_heatmap_values(heatmap_terms, graph_terms)
@@ -105,23 +103,19 @@ def make_basemap(basemap):
     try:
         set_status('getting document list', model=basemap)
         with ManagedSession() as session:
-            basemap_query = create_query(session, author=basemap.author, conference=basemap.conference, journal=basemap.journal)
-            documents = filter_query(basemap_query, dirty=False,
-                                    starting_year=basemap.starting_year,
-                                    ending_year=basemap.ending_year,
-                                    sample_size=basemap.sample_size,
-                                    model=basemap)
-            extracted_terms = extract_terms(documents, basemap.term_type)
+            filtered_query = create_query_for_model(session, basemap, dirty=False)
+            extracted_terms = extract_terms(filtered_query, basemap.term_type)
         if not extracted_terms:
             raise Exception('No documents found matching query!')
-        map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms,
-                                                                       ranking_algorithm=basemap.ranking_algorithm,
-                                                                       similarity_algorithm=basemap.similarity_algorithm,
-                                                                       filtering_algorithm=basemap.filtering_algorithm,
-                                                                       number_of_terms=basemap.number_of_terms,
-                                                                       model=basemap)
+        map_dict, graph_terms, phrase_frequencies, unnormed_dict, phrase_scores = map_representation(extracted_terms,
+                                                                                                     ranking_algorithm=basemap.ranking_algorithm,
+                                                                                                     similarity_algorithm=basemap.similarity_algorithm,
+                                                                                                     filtering_algorithm=basemap.filtering_algorithm,
+                                                                                                     number_of_terms=basemap.number_of_terms,
+                                                                                                     model=basemap)
         # map_string will be a graphviz-processable string
-        map_string = write_dot.output_pairs_dict(map_dict, True, phrase_frequencies=phrase_frequencies, true_scaling=True).decode('ascii', 'ignore')
+        # map_string = write_dot.output_pairs_dict(map_dict, True, phrase_frequencies=phrase_frequencies, true_scaling=True).decode('ascii', 'ignore')
+        map_string = write_dot.output_pairs_dict(map_dict, True, phrase_frequencies=phrase_frequencies, true_scaling=True, similarities=unnormed_dict, phrase_scores=phrase_scores).decode('ascii', 'ignore')
         # save to database
         basemap.dot_rep = map_string
         # basemap.phrase_frequencies = json.dumps(jsonize_phrase_dict(phrase_frequencies), indent=4).decode('ascii', 'ignore')
@@ -139,9 +133,9 @@ def make_basemap(basemap):
         return map_dict, graph_terms
     except ZeroDivisionError as e:
         set_status('Error: too few documents to produce a map. Try a broader search', model=basemap)
-    except Exception as e:
-        set_status('Error: %s' % e, model=basemap)
-        raise e
+    # except Exception as e:
+    #     set_status('Error: %s' % e, model=basemap)
+    #     raise e
 
 def _make_arg_filter(passthrough_dict):
     """takes a dictionary of argname, type and returns a function that will

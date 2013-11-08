@@ -183,6 +183,16 @@ def create_query(session, author=None, conference=None, journal=None):
     else:
         return query
 
+def create_query_for_model(session, model, dirty=False, sample=True):
+    model_query= create_query(session, author=model.author, conference=model.conference, journal=model.journal)
+    sample_size = model.sample_size if sample else None
+    print 'sample_size', sample_size
+    return filter_query(model_query, dirty=dirty,
+                        starting_year=model.starting_year,
+                        ending_year=model.ending_year,
+                        sample_size=sample_size,
+                        model=model)
+
 if __name__ == '__main__':
     engine.echo = True
     create_all()

@@ -15,9 +15,10 @@ def make_map(query, only_terms=False, file_format='svg',
                              ending_year=ending_year,
                              sample_size=sample_size)
     extracted_terms = extract_terms(documents, term_type)
-    map_dict, graph_terms, phrase_frequencies = map_representation(extracted_terms, data_dump_path=data_dump_path, **kwargs)
+    map_dict, graph_terms, phrase_frequencies, similarities = map_representation(extracted_terms, data_dump_path=data_dump_path, **kwargs)
+    print type(similarities)
     # map_string will be a graphviz-processable string
-    map_string = write_dot.output_pairs_dict(map_dict, True)
+    map_string = write_dot.output_pairs_dict(map_dict, True, similarities=similarities)
 
     if evaluation_output_path:
         import evaluation
