@@ -12,22 +12,20 @@ def jaccard_query(documents, phrases_to_score, partial):
         sys.stdout.flush()
     return jaccard((doc.terms_list() for doc in documents), phrases_to_score, partial=partial, status_callback=status_callback, status_increment=1000)
 
-def jaccard_threshold(query, threshold=10, partial=False):
-    documents = list(query)
-    term_counts =  count_terms(documents)
-    phrases_to_score = set(term for term, count in term_counts.iteritems()
-                           if count >= threshold)
-    return jaccard_query(documents, phrases_to_score, partial=partial)
-
-
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('dump_filename')
     parser.add_argument('--threshold', type=int, default=10)
+    parser.add_argument('--partial', action='store_true')
+    parser.add_argument('--slice_size', type=int, default=100000)
     args = parser.parse_args()
     with ManagedSession() as session:
-        query = sliced_query(filter_query(session.query(Document), dirty=False, sample_size=30000))
-        jaccard_return = jaccard_threshold(query, partial=True, threshold=args.threshold)
+        def make_query():
+            return sliced_query(filter_query(session.query(Document), dirty=False, sample_size=None), slice_size=args.slice_size)
+        term_counts =  count_terms(make_query())
+        phrases_to_score = set(term for term, count in term_counts.iteritems()
+                               if count >= args.threshold)
+        jaccard_return = jaccard_query(make_query(), phrases_to_score, partial=args.partial)
         with open(args.dump_filename, 'wb') as f:
             cPickle.dump(jaccard_return, f)
