@@ -272,16 +272,16 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
                                     intersection[index1,index2] += 1
                                     intersection[index2,index1] += 1
     # use inclusion exclusion
-    # tiled_phrase_count = np.lib.stride_tricks.as_strided(phrase_count,
-    #                                                      (N, phrase_count.size),
-    #                                                      (0, phrase_count.itemsize))
-    # union = tiled_phrase_count + tiled_phrase_count.T - intersection
-    # jaccard = intersection / union
-    jaccard = dok_matrix((N, N))
-    for coords, intersection_count in intersection.iteritems():
-        jaccard[coords] = intersection_count / (phrase_count[coords[0]] + phrase_count[coords[1]] - intersection_count)
-    if not partial:
-        return np.asarray(jaccard.todense()), phrases
+    if partial:
+        tiled_phrase_count = np.lib.stride_tricks.as_strided(phrase_count,
+                                                            (N, phrase_count.size),
+                                                            (0, phrase_count.itemsize))
+        union = tiled_phrase_count + tiled_phrase_count.T - intersection
+        jaccard = intersection / union
     else:
-        return jaccard, phrases
+        jaccard = dok_matrix((N, N))
+        for coords, intersection_count in intersection.iteritems():
+            jaccard[coords] = intersection_count / (phrase_count[coords[0]] + phrase_count[coords[1]] - intersection_count)
+        jaccard = np.asarray(jaccard.todense())
+    return jaccard, phrases
 
