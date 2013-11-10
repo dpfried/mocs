@@ -10,7 +10,7 @@ def count_terms(documents, print_freq = 1000):
     for i, document in enumerate(documents):
         term_counts.update(document.terms_list())
         if print_freq and i % print_freq == 0:
-            sys.stdout.write('\r%d processed' % i)
+            sys.stdout.write('\r%d counted' % i)
             sys.stdout.flush()
     return term_counts
 

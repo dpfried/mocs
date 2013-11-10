@@ -4,6 +4,7 @@ import sys
 import cPickle
 from lib.similarity import jaccard
 from lib.partial_match_dict import PartialMatchDict, PartialMatchDict2
+from lib.ranking import cnc_unigrams
 
 from validation.coverage import count_terms
 
@@ -24,12 +25,24 @@ if __name__ == "__main__":
     with ManagedSession() as session:
         def make_query():
             return sliced_query(filter_query(session.query(Document), dirty=False, sample_size=None), slice_size=args.slice_size)
+        print 'counting terms'
         term_counts =  count_terms(make_query())
+        print 'filtering terms'
         phrases_to_score = set(term for term, count in term_counts.iteritems()
                                if count >= args.threshold)
+        print '%d phrases' % len(phrases_to_score)
         import time
         start = time.time()
-        jaccard_return = jaccard_query(make_query(), phrases_to_score, partial=args.partial, pmd_class=PartialMatchDict2)
+        print 'ranking phrases'
+        scored_phrases, _ = cnc_unigrams(phrase for doc in make_query()
+                                         for phrase in doc.terms_list()
+                                         if phrase in phrases_to_score)
+        print 'ordering phrases'
+        ordered_phrases = [phrase for phrase, score in sorted(scored_phrases.iteritems(),
+                                                             key=lambda p: p[1], reverse=True)]
+        print 'similarities'
+        jaccard_return = jaccard_query(make_query(), ordered_phrases, partial=args.partial, pmd_class=PartialMatchDict2)
         print time.time() - start
+        print 'dumping'
         with open(args.dump_filename, 'wb') as f:
             cPickle.dump(jaccard_return, f)
