@@ -3,7 +3,7 @@ from utils import hashable
 from partial_match_dict import PartialMatchDict
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
-from scipy.sparse import lil_matrix
+from scipy.sparse import lil_matrix, dok_matrix
 from numpy import log
 # from sparsesvd import sparsesvd
 
@@ -201,7 +201,7 @@ def jaccard_full(structured_phrases, phrases_to_score, status_callback=None):
 def status_format(percent):
     return 'similarity: %.0f%% done' % (percent * 100)
 
-def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=None):
+def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=None, status_increment=None):
     """ calculate jaccard similarity between phrases_to_score, using
     structured_phrases to determine cooccurrences. For phrases `a' and `b', let
     A be the set of documents `a' appeared in, and B be the set of documents
@@ -225,19 +225,20 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
     N = len(phrases_to_score)
 
     phrase_count = np.zeros(N)
-    intersection = np.zeros(shape=(N, N))
+    intersection = dok_matrix((N, N))
 
     count = 0
-    length = len(structured_phrases)
-    increment = length / 100
-
-    def do_callback():
-        if increment > 0 and status_callback and count % increment == 0:
-            status_callback(status_format(float(count) / length))
+    if status_callback and not status_increment:
+        length = len(structured_phrases)
+        status_increment = length / 100
 
     # take each document
     for doc_phrases in structured_phrases:
-        do_callback()
+        if status_callback and status_increment > 0 and count % status_increment == 0:
+            try:
+                status_callback(status_format(float(count) / length))
+            except:
+                status_callback("%d processed" % count)
         count += 1
         # take all phrases within this document
         for i in range(len(doc_phrases)):
@@ -265,9 +266,15 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
                         for index1 in matches1:
                             for index2 in matches2:
                                 if index2 != index1:
-                                    intersection[index1][index2] += 1
-                                    intersection[index2][index1] += 1
+                                    intersection[index1,index2] += 1
+                                    intersection[index2,index1] += 1
     # use inclusion exclusion
-    union = np.array([phrase_count,]*N) + np.array([phrase_count,]*N).transpose() - intersection
-    jaccard = intersection / union
+    # tiled_phrase_count = np.lib.stride_tricks.as_strided(phrase_count,
+    #                                                      (N, phrase_count.size),
+    #                                                      (0, phrase_count.itemsize))
+    # union = tiled_phrase_count + tiled_phrase_count.T - intersection
+    # jaccard = intersection / union
+    jaccard = dok_matrix((N, N))
+    for coords, intersection_count in intersection.iteritems():
+        jaccard[coords] = intersection_count / (phrase_count[coords[0]] + phrase_count[coords[1]] - intersection_count)
     return jaccard, phrases
