@@ -225,7 +225,10 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
     N = len(phrases_to_score)
 
     phrase_count = np.zeros(N)
-    intersection = dok_matrix((N, N))
+    if partial:
+        intersection = np.zeros((N, N), dtype=np.uint32)
+    else:
+        intersection = dok_matrix((N, N), dtype=np.uint32)
 
     count = 0
     if status_callback and not status_increment:
