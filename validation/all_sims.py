@@ -3,14 +3,15 @@ from lib.mocs_database import Document, filter_query
 import sys
 import cPickle
 from lib.similarity import jaccard
+from lib.partial_match_dict import PartialMatchDict, PartialMatchDict2
 
 from validation.coverage import count_terms
 
-def jaccard_query(documents, phrases_to_score, partial):
+def jaccard_query(documents, phrases_to_score, partial, **kwargs):
     def status_callback(s):
         sys.stdout.write('\r' + s)
         sys.stdout.flush()
-    return jaccard((doc.terms_list() for doc in documents), phrases_to_score, partial=partial, status_callback=status_callback, status_increment=1000)
+    return jaccard((doc.terms_list() for doc in documents), phrases_to_score, partial=partial, status_callback=status_callback, status_increment=1000, **kwargs)
 
 if __name__ == "__main__":
     import argparse
@@ -26,6 +27,9 @@ if __name__ == "__main__":
         term_counts =  count_terms(make_query())
         phrases_to_score = set(term for term, count in term_counts.iteritems()
                                if count >= args.threshold)
-        jaccard_return = jaccard_query(make_query(), phrases_to_score, partial=args.partial)
+        import time
+        start = time.time()
+        jaccard_return = jaccard_query(make_query(), phrases_to_score, partial=args.partial, pmd_class=PartialMatchDict2)
+        print time.time() - start
         with open(args.dump_filename, 'wb') as f:
             cPickle.dump(jaccard_return, f)
