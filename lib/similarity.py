@@ -280,4 +280,8 @@ def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback
     jaccard = dok_matrix((N, N))
     for coords, intersection_count in intersection.iteritems():
         jaccard[coords] = intersection_count / (phrase_count[coords[0]] + phrase_count[coords[1]] - intersection_count)
-    return jaccard, phrases
+    if not partial:
+        return np.asarray(jaccard.todense()), phrases
+    else:
+        return jaccard, phrases
+
