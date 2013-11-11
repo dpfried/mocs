@@ -1,24 +1,26 @@
 #!/usr/bin/python
-from pipeline import create_query, filter_query,\
-    map_representation, strip_dimensions, call_graphviz, call_rank,\
+from pipeline import map_representation, strip_dimensions, call_graphviz, call_rank,\
     call_similarity, call_filter, function_help, TermExtraction, extract_terms
 from database import ManagedSession
+from mocs_database import create_query, filter_query
 import write_dot
 
 debug = False
 def make_map(query, only_terms=False, file_format='svg',
-             include_svg_dimensions=False, starting_year=2000,
-             ending_year=2013, sample_size=None, evaluation_output_path=None,
-             term_type=TermExtraction.Phrases, data_dump_path=None, **kwargs):
+             include_svg_dimensions=False, starting_year=None,
+             ending_year=None, sample_size=None, evaluation_output_path=None,
+             term_type=TermExtraction.Phrases, data_dump_path=None, n_layers=0, graph_attrs=None, **kwargs):
     documents = filter_query(query,
                              starting_year=starting_year,
                              ending_year=ending_year,
                              sample_size=sample_size)
     extracted_terms = extract_terms(documents, term_type)
-    map_dict, graph_terms, phrase_frequencies, similarities = map_representation(extracted_terms, data_dump_path=data_dump_path, **kwargs)
+    map_dict, graph_terms, phrase_frequencies, similarities, scored_phrases = map_representation(extracted_terms, data_dump_path=data_dump_path, **kwargs)
     print type(similarities)
     # map_string will be a graphviz-processable string
-    map_string = write_dot.output_pairs_dict(map_dict, True, similarities=similarities)
+    print 'here'
+    map_string = write_dot.output_pairs_dict(map_dict, False, true_scaling=True, phrase_frequencies=phrase_frequencies, similarities=similarities, phrase_scores=scored_phrases, n_layers=n_layers, graph_attrs=graph_attrs)
+    print map_string
 
     if evaluation_output_path:
         import evaluation
@@ -42,17 +44,22 @@ def map_args(args):
     arg_set = set(['starting_year', 'ending_year', 'ranking_algorithm',
                    'similarity_algorithm', 'filtering_algorithm',
                    'number_of_terms', 'include_svg_dimensions', 'file_format',
-                   'only_terms', 'sample_size', 'evaluation_output_path'])
+                   'only_terms', 'sample_size', 'evaluation_output_path', 'n_layers'])
+    graphattr_set = set(['layerselect'])
     pass_args = {}
     for arg in arg_set:
         if arg in args:
             pass_args[arg] = args[arg]
+    graph_attrs = { key: args[key] for key in graphattr_set if key in args and args[key]}
+    pass_args['graph_attrs'] = graph_attrs
+
     return pass_args
 
 if __name__ == "__main__":
     """takes a map using the given parameters, and prints to standard out"""
     import argparse
     parser = argparse.ArgumentParser(description="make map and print to standard out")
+    parser.add_argument('output_file')
     parser.add_argument('--starting_year', type=int, help='starting year for query (inclusive)')
     parser.add_argument('--ending_year', type=int, help='ending year for query (inclusive)')
     parser.add_argument('--sample_size', default=30000, type=int, help='number of rows to sample')
@@ -71,13 +78,19 @@ if __name__ == "__main__":
     parser.add_argument('--debug', default=False, action="store_true", help="print status to stdout")
     parser.add_argument('--evaluation_output_path', help="run evaluation metrics, and dump files to this directory")
     parser.add_argument('--data_dump_path', type=str, help="dump some pickle files to this path")
+    parser.add_argument('--n_layers', type=int, default=0)
+    parser.add_argument('--layerselect')
     args = vars(parser.parse_args())
 
     global debug
     debug = args['debug']
     with ManagedSession() as session:
         query = create_query(session, author=args['author'], journal=args['journal'], conference=args['conference'])
-        print make_map(query,
-                       term_type=TermExtraction.names.index(args['term_type_name']),
-                       data_dump_path=args['data_dump_path'],
-                       **map_args(args))
+        map_output = make_map(query,
+                              term_type=TermExtraction.names.index(args['term_type_name']),
+                              data_dump_path=args['data_dump_path'],
+                              **map_args(args))
+    print args['output_file']
+    print map_output[:10]
+    with open(args['output_file'], 'w') as f:
+        f.write(map_output)

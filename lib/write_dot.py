@@ -1,7 +1,8 @@
-header = """graph G {
-forcelabels=false;
-node [label="", shape=plaintext];
-"""
+def make_header(**attrs):
+    return """graph G {
+    forcelabels=false;
+    node [label="", shape=plaintext];
+    """ + '\n'.join('%s="%s";' % (k, v) for (k, v) in attrs.items())
 
 footer = "}"
 
@@ -29,7 +30,7 @@ def output_pairs(labels, dist_matrix, dist_filter=lambda x: x != 1):
     dist_filter - a function that will be called on each distance. Distance is
                   only written if it returns true
     """
-    graph_rep = header
+    graph_rep = make_header()
     N = len(labels)
     for i in range(N):
         for j in range(i+1, N):
@@ -45,8 +46,12 @@ def create_font_size_function(phrase_frequencies, min_size=12, max_size=30):
         return int((freq - min_freq) / float(max_freq - min_freq) * (max_size - min_size) + min_size)
     return font_size_from_frequency
 
-def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None, true_scaling=False, phrase_frequencies=None, similarities=None, phrase_scores=None):
-    graph_rep = header
+def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None, true_scaling=False, phrase_frequencies=None, similarities=None, phrase_scores=None, n_layers=0, graph_attrs=None):
+    if not graph_attrs:
+        graph_attrs = {}
+    if n_layers:
+        graph_attrs['layers'] = ':'.join(map(str, range(1, n_layers+1)))
+    graph_rep = make_header(**graph_attrs)
 
     graph_terms = set()
     for term, lst in pair_similarity.items():
@@ -55,6 +60,11 @@ def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None,
 
     if true_scaling and phrase_frequencies is not None:
         font_size_from_frequency = create_font_size_function(phrase_frequencies)
+
+    min_freq, max_freq = min(phrase_frequencies.values()), max(phrase_frequencies.values())
+    def level_from_freq(freq):
+        level = (freq - min_freq) * n_layers / (max_freq - min_freq)
+        return max(min(level, n_layers - 1), 0) + 1
 
     for term in graph_terms:
         if true_scaling:
@@ -67,7 +77,11 @@ def output_pairs_dict(pair_similarity, enlarge_primary=False, heatmap_vals=None,
             level = heatmap_vals[term]
         else:
             level = 0
-        kwargs = {'level': level, 'fontsize': fontsize, 'freq':phrase_frequencies[term]}
+        kwargs = {'level': level, 'fontsize': fontsize}
+        if phrase_frequencies:
+            kwargs['freq'] = phrase_frequencies[term]
+            if n_layers:
+                kwargs['layer'] = level_from_freq(phrase_frequencies[term])
         if phrase_scores:
             kwargs['imp'] = phrase_scores[term]
         graph_rep += node_string(safe_string(term), **kwargs)
