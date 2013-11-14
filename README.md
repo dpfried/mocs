@@ -21,6 +21,12 @@ Edit this file if your graphviz binaries or nltk data are in a non-standard loca
 
 5. Run `./build_dblp.sh` to create the database and load it with data downloaded from DBLP.
 
+Example Usage:
+        python lib/cli_interface.py perlis.pdf --author "%Perlis" --ending_year 1990
+
+For a full list of command options:
+        python lib/cli_interface.py -h
+
 Additional setup for Django server
 ---------
 Allows creation of basemaps and heatmaps.
@@ -30,7 +36,7 @@ Allows creation of basemaps and heatmaps.
 2. Set up Django settings (optional).
 Edit `DATABASES`, `SECRET_KEY`, and `ADMINS` in `settings.py`, or create a new file
 `local_settings.py` containing these parameters.
-If DATABASES is not edited, the DBLP data will be stored in a SQLite database called `mocs.db` in the project root (which is by default the same database the DBLP data is stored in).
+If DATABASES is not edited, the Django tables will be stored in a SQLite database called `mocs.db` in the project root (which is by default the same database the DBLP data is stored in).
 
 3. Create Django databases:
 
