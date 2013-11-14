@@ -56,9 +56,8 @@ def map_args(args):
     return pass_args
 
 if __name__ == "__main__":
-    """takes a map using the given parameters, and prints to standard out"""
     import argparse
-    parser = argparse.ArgumentParser(description="make map and save to file")
+    parser = argparse.ArgumentParser(description="make basemap with the given parameters, render it, and save to the provided filename. Saves as pdf by default, can be changed (to bmp, jpg, png, svg, ps) with file_format flag")
     parser.add_argument('output_file')
     parser.add_argument('--starting_year', type=int, help='starting year for query (inclusive)')
     parser.add_argument('--ending_year', type=int, help='ending year for query (inclusive)')
@@ -69,10 +68,10 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--number_of_terms', default=1000, type=int, help='number of terms to rank')
     parser.add_argument('--include_svg_dimensions', default=False, action="store_true", help='include width and height attributes in svg file')
     parser.add_argument('--dirty', default=False, action="store_true", help='include documents not marked as clean (no title or not in English)')
-    parser.add_argument('--file_format', default='pdf', type=str, help='file format of map. "raw" for graphviz schematic')
+    parser.add_argument('--file_format', default='pdf', type=str, help="file format of map. Options include 'pdf', 'bmp', 'jpg', 'png', 'ps', 'svg', or 'raw' for graphviz schematic")
     parser.add_argument('--author', default=None, help="string to match author using SQL's like (can use %%)")
-    parser.add_argument('--conference', default=None, help="string to match author using SQL's like (can use %%)")
-    parser.add_argument('--journal', default=None, help="string to match author using SQL's like (can use %%)")
+    parser.add_argument('--conference', default=None, help="string to match conference using SQL's like (can use %%)")
+    parser.add_argument('--journal', default=None, help="string to match journal using SQL's like (can use %%)")
     parser.add_argument('--only_terms', default=False, action="store_true", help="return a list of terms in the map")
     parser.add_argument('--term_type_name', type=str, default=TermExtraction.names[TermExtraction.Phrases], help="type of term to extract. Options: %s" % (TermExtraction.names))
     parser.add_argument('--debug', default=False, action="store_true", help="print status to stdout")
