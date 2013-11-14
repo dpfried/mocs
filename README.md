@@ -38,3 +38,6 @@ If DATABASES is not edited, the DBLP data will be stored in a SQLite database ca
 4. Run the server:
 `./manage.py celeryd`
 `./manage.py runserver`
+
+5. Access the map interface at
+`http://localhost:8000/maps/query/`
