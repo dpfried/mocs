@@ -8,6 +8,27 @@ def abspath(*args):
     currpath = os.path.dirname(__file__)
     return os.path.abspath(os.path.join(currpath, '.', *args))
 
+try:
+    from local_settings import *
+except ImportError:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'mocs.db',                      # Or path to database file if using sqlite3.
+            'USER': '',                      # Not used with sqlite3.
+            'PASSWORD': '',                  # Not used with sqlite3.
+            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        }
+    }
+
+    STATIC_ROOT = ''
+
+    SECRET_KEY = '---SECRET KEY HERE---'
+
+    ADMINS = (
+        # ('Your Name', 'your_email@example.com'),
+    )
 
 # celery settings
 BROKER_URL = 'amqp://guest:guest@localhost:5672//'
@@ -16,11 +37,8 @@ CELERY_PID_FILENAME = abspath('celeryd.pid')
 CELERY_LOG_FILENAME = abspath('celeryd.log')
 CELERY_SEND_TASK_ERROR_EMAILS = True
 
-DEBUG = False
+DEBUG = True
 
-ADMINS = (
-    ('dfried', 'dfried@email.arizona.edu'),
-)
 
 TEMPLATE_DEBUG = DEBUG
 
@@ -60,12 +78,12 @@ MEDIA_URL = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static2/'
+STATIC_URL = '/static/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static2/admin/'
+ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
@@ -149,21 +167,3 @@ LOGGING = {
         },
     }
 }
-
-try:
-    from local_settings import *
-except ImportError:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'mocs.db',                      # Or path to database file if using sqlite3.
-            'USER': '',                      # Not used with sqlite3.
-            'PASSWORD': '',                  # Not used with sqlite3.
-            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-        }
-    }
-
-    STATIC_ROOT = abspath('static')
-
-    SECRET_KEY = '---SECRET KEY HERE---'

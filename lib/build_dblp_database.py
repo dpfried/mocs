@@ -4,6 +4,7 @@ import mocs_database as db
 import sys
 from chunking import noun_phrases
 import langid
+import sys
 
 # http://codereview.stackexchange.com/questions/2449/parsing-huge-xml-file-with-lxml-etree-iterparse-in-python
 # CATEGORIES = set(['article', 'inproceedings', 'proceedings', 'book', 'incollection', 'phdthesis', 'mastersthesis', 'www'])
@@ -24,6 +25,7 @@ def has_stop_words(title):
     return False
 
 def ok_title(title):
+    """see if the title appears to be English and doesn't have stopwords"""
     global langdetect
     if not langdetect:
         langdetect = langid.LangDetect(['en', 'de', 'fr', 'es'])
@@ -47,14 +49,16 @@ def memoized_row(Class, memo, name):
 
 def load_memo_from_database(Class):
     """Class must have a name attribute"""
-    memo = {}
-    print 'for class', Class
-    print 'loading %d records already in database' % Class.query.count()
-    for row in Class.query.all():
-        if row.name in memo:
-            print "warning: found duplicate %s" % row.name
-        memo[row.name] = row
-    return memo
+    with ManagedSession() as session:
+        memo = {}
+        print 'for class', Class
+        query = session.query(Class)
+        print 'loading %d records already in database' % query.count()
+        for row in query:
+            if row.name in memo:
+                print "warning: found duplicate %s" % row.name
+            memo[row.name] = row
+        return memo
 
 if __name__ == '__main__':
     # mapping of author, journal, and conference names to existing rows in database
@@ -106,7 +110,8 @@ if __name__ == '__main__':
                 # commit changes periodically
                 if (count % 1000 == 0):
                     session.commit()
-                    print 'created %s records (about %.f%% done)' % (count, float(count) * 100 / 3228329)
+                    sys.stdout.write('\rcreated %s records' % (count))
+                    sys.stdout.flush()
             else:
                 # if we're down here, we reached the end of some tag that wasn't a
                 # doc tag, (for example title or year), so store the tag's text in
@@ -126,4 +131,5 @@ if __name__ == '__main__':
             elem.clear()
         # commit lingering changes
         session.commit()
+    print
     print 'finished, created %s records' % count

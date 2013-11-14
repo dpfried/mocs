@@ -160,7 +160,7 @@ def filter_query(query, dirty=False, starting_year=None, ending_year=None,
         model.documents_in_set = documents_in_set
         set_status('%d documents met filtering criteria' % documents_in_set)
     if sample_size is not None:
-        filtered = filtered.order_by(func.rand()).limit(sample_size)
+        filtered = filtered.order_by(func.random()).limit(sample_size)
     if model is not None:
         documents_sampled = filtered.count()
         model.documents_sampled = documents_sampled

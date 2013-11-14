@@ -69,7 +69,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--number_of_terms', default=1000, type=int, help='number of terms to rank')
     parser.add_argument('--include_svg_dimensions', default=False, action="store_true", help='include width and height attributes in svg file')
     parser.add_argument('--dirty', default=False, action="store_true", help='include documents not marked as clean (no title or not in English)')
-    parser.add_argument('--file_format', default='svg', type=str, help='file format of map. "raw" for graphviz schematic')
+    parser.add_argument('--file_format', default='pdf', type=str, help='file format of map. "raw" for graphviz schematic')
     parser.add_argument('--author', default=None, help="string to match author using SQL's like (can use %%)")
     parser.add_argument('--conference', default=None, help="string to match author using SQL's like (can use %%)")
     parser.add_argument('--journal', default=None, help="string to match author using SQL's like (can use %%)")
