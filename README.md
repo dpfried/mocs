@@ -22,9 +22,11 @@ Edit this file if your graphviz binaries or nltk data are in a non-standard loca
 5. Run `./build_dblp.sh` to create the database and load it with data downloaded from DBLP.
 
 Example Usage:
+
         python lib/cli_interface.py perlis.pdf --author "%Perlis" --ending_year 1990
 
 For a full list of command options:
+
         python lib/cli_interface.py -h
 
 Additional setup for Django server
