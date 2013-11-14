@@ -8,16 +8,12 @@ Code is released under the [MIT License](MIT-LICENSE.txt).
 Allows creation of basemaps through [`lib/cli_interface.py`](lib/cli_interface.py).
 
 1. Install the python dependencies listed in requirements.txt. Using pip:
-```
-pip install -r requirements.txt
-```
+    pip install -r requirements.txt
 
 2. Install [graphviz](http://graphviz.org/Download..php)
 
 3. Download NLTK corpora by running
-```
-python -m nltk.downloader brown langid
-```
+    python -m nltk.downloader brown langid
 
 4. Rename `lib/mocs_configTEMPLATE.py` to `lib/mocs_config.py`
 Edit this file if your graphviz binaries or nltk data are in a non-standard location, or if you want the document database to be stored in a non-SQLite database. If this file is not edited, the DBLP data will be stored in a SQLite database called `mocs.db` in the project root.
@@ -35,14 +31,10 @@ Edit `DATABASES`, `SECRET_KEY`, and `ADMINS` in `settings.py`, or create a new f
 If DATABASES is not edited, the DBLP data will be stored in a SQLite database called `mocs.db` in the project root (which is by default the same database the DBLP data is stored in).
 
 3. Create Django databases:
-```
-./manage.py syncdb
-```
+    ./manage.py syncdb
 
 4. Run the server:
-```
-./manage.py celeryd
-./manage.py runserver
-```
+    ./manage.py celeryd
+    ./manage.py runserver
 
 5. Access the map interface at `http://localhost:8000/maps/query/`
