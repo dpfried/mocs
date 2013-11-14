@@ -58,7 +58,7 @@ def map_args(args):
 if __name__ == "__main__":
     """takes a map using the given parameters, and prints to standard out"""
     import argparse
-    parser = argparse.ArgumentParser(description="make map and print to standard out")
+    parser = argparse.ArgumentParser(description="make map and save to file")
     parser.add_argument('output_file')
     parser.add_argument('--starting_year', type=int, help='starting year for query (inclusive)')
     parser.add_argument('--ending_year', type=int, help='ending year for query (inclusive)')

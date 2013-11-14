@@ -5,11 +5,8 @@ from math import log
 import nltk
 from mocs_config import NLTK_DATA_PATH
 
-if NLTK_DATA_PATH not in nltk.data.path:
+if NLTK_DATA_PATH and NLTK_DATA_PATH not in nltk.data.path:
     nltk.data.path.append(NLTK_DATA_PATH)
-zuni_path = '/var/www/zuni/html/mocs/nltk_data'
-if zuni_path not in nltk.data.path:
-    nltk.data.path.append(zuni_path)
 
 class CorpusRanker:
     def __init__(self, corpus=nltk.corpus.brown.words(), ngram_range=(1,6)):

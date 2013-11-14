@@ -1,6 +1,6 @@
 import numpy as np
 from utils import hashable
-from partial_match_dict import PartialMatchDict, PartialMatchDict2
+from partial_match_dict import PartialMatchDict
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
 from scipy.sparse import lil_matrix, dok_matrix
@@ -201,7 +201,7 @@ def jaccard_full(structured_phrases, phrases_to_score, status_callback=None):
 def status_format(percent):
     return 'similarity: %.0f%% done' % (percent * 100)
 
-def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=None, status_increment=None, pmd_class=PartialMatchDict2):
+def jaccard(structured_phrases, phrases_to_score, partial=False, status_callback=None, status_increment=None, pmd_class=PartialMatchDict):
     """ calculate jaccard similarity between phrases_to_score, using
     structured_phrases to determine cooccurrences. For phrases `a' and `b', let
     A be the set of documents `a' appeared in, and B be the set of documents

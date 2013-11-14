@@ -1,0 +1,4 @@
+N{
+    $.label = gsub($.name, " ", "\\n");
+    /* $.xlabel = gsub($.name, " ", "\\n"); */
+}
