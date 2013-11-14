@@ -2,11 +2,11 @@ Maps of Computer Science
 ================
 MoCS is a system to visualize topics from the [DBLP](http://dblp.uni-trier.de/) database of research papers. A [live version of this code](http://mocs.cs.arizona.edu) is available, including a description of the algorithms implemented and demonstrations of the maps rendered by the system, and a research paper describing how the system works.
 
-Setup for command line interface
+Basic Setup
 --------
 Allows creation of basemaps through [`lib/cli_interface.py`](lib/cli_interface.py).
 
-1. Install the python dependencies listed in requirements.txt. Using pip:
+1. Install the python dependencies listed in [requirements.txt](requirements.txt). Using pip:
 
         pip install -r requirements.txt
 
@@ -21,9 +21,9 @@ Edit this file if your graphviz binaries or nltk data are in a non-standard loca
 
 5. Run `./build_dblp.sh` to create the database and load it with data downloaded from DBLP.
 
-Setup for webserver
+Additional setup for Django server
 ---------
-Allows creation of basemaps and heatmaps
+Allows creation of basemaps and heatmaps.
 
 1. Install [rabbitmq](http://www.rabbitmq.com/download.html).
 
